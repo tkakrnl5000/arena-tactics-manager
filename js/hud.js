@@ -48,7 +48,9 @@ function cacheDom() {
     "top-room-badge",
     "top-net-badge",
     "btn-sfx-toggle",
+    "btn-go-home",
     "btn-go-hub",
+    "lobby-resume-card",
     "btn-create-arcade-room",
     "btn-create-room",
     "arcade-lobby-header",
@@ -97,6 +99,8 @@ function cacheDom() {
     "red-team-bars",
     "ticker-list",
     "bottom-tactical-bar",
+    "owner-broadcast-bar",
+    "tactical-calls-wrap",
     "rite-series-header",
     "rite-coach-actions",
     "rite-cards-list",
@@ -131,12 +135,21 @@ function escapeHtml(str) {
 }
 
 /**
- * 구단명에서 중계용 3글자 약칭을 만든다. 예) "서울 노바 (Seoul Nova)" → "SNO"
+ * 구단 객체 또는 구단명에서 LCK 중계용 공식 약칭을 반환한다.
  */
-function teamAbbr(teamName) {
-  const raw = String(teamName || "TEAM");
+function teamAbbr(teamOrSeat) {
+  if (teamOrSeat && typeof teamOrSeat === "object") {
+    if (teamOrSeat.shortTag) return String(teamOrSeat.shortTag).toUpperCase();
+    return teamAbbr(teamOrSeat.teamName || "TEAM");
+  }
+  const raw = String(teamOrSeat || "TEAM");
   const m = raw.match(/\(([^)]+)\)/);
-  const words = (m ? m[1] : raw).trim().split(/\s+/).filter(Boolean);
+  const tagSrc = (m ? m[1] : raw).trim();
+  if (/^[A-Za-z0-9.+]{2,4}$/.test(tagSrc)) {
+    return tagSrc.replace(/\./g, "").toUpperCase();
+  }
+  const clean = tagSrc.replace(/\./g, "");
+  const words = clean.split(/\s+/).filter(Boolean);
   if (words.length >= 2) {
     return (words[0][0] + words[1].slice(0, 2)).toUpperCase();
   }
@@ -145,6 +158,116 @@ function teamAbbr(teamName) {
 
 function shortTeamName(teamName) {
   return String(teamName || "").split(" (")[0];
+}
+
+function resolveLckLogoKey(teamOrSeat) {
+  if (!teamOrSeat) return "t1";
+  if (typeof teamOrSeat === "object") {
+    if (teamOrSeat.logoId) return String(teamOrSeat.logoId).toLowerCase();
+    if (teamOrSeat.shortTag) return String(teamOrSeat.shortTag).toLowerCase();
+    return resolveLckLogoKey(teamOrSeat.teamName || teamOrSeat.teamId || "");
+  }
+  const s = String(teamOrSeat).toLowerCase();
+  if (s.includes("t1") || s === "team_0") return "t1";
+  if (s.includes("gen") || s.includes("젠지") || s === "team_1") return "gen";
+  if (s.includes("hle") || s.includes("한화") || s === "team_2") return "hle";
+  if (s.includes("dk") || s.includes("디플러스") || s === "team_3") return "dk";
+  if (s.includes("kt") || s.includes("롤스터") || s === "team_4") return "kt";
+  if (s.includes("bfx") || s.includes("피어엑스") || s === "team_5") return "bfx";
+  if (s.includes("ns") || s.includes("농심") || s === "team_6") return "ns";
+  if (s.includes("drx") || s === "team_7") return "drx";
+  if (s.includes("bro") || s.includes("브리온") || s === "team_8") return "bro";
+  if (s.includes("dns") || s.includes("수퍼스") || s.includes("광동") || s === "team_9") return "dns";
+  return "t1";
+}
+
+/**
+ * LCK 10개 구단 벡터 엠블럼 SVG 로고
+ */
+function getTeamLogoSvg(teamOrSeat, size = 18) {
+  const key = resolveLckLogoKey(teamOrSeat);
+  const color = (teamOrSeat && typeof teamOrSeat === "object" && teamOrSeat.teamColor) || "#38bdf8";
+  let body = "";
+  switch (key) {
+    case "t1":
+      body = `
+        <rect x="1.5" y="1.5" width="21" height="21" rx="5" fill="#14070B" stroke="#E4002B" stroke-width="1.6"/>
+        <path d="M4.2 7.5h10.2l-1.3 2.7H9.6l-1.5 6.8H5.6l1.5-6.8H3.8l0.4-2.7z" fill="#E4002B"/>
+        <path d="M16.2 7h3.3l-2.1 10h-2.8l1.6-10z" fill="#FFFFFF"/>
+        <path d="M13.7 9.6l2.3-2.6h2.2l-1.2 2.6h-3.3z" fill="#E4002B"/>
+      `;
+      break;
+    case "gen":
+      body = `
+        <polygon points="12,1.5 21.5,5.5 19.5,16.5 12,22.5 4.5,16.5 2.5,5.5" fill="#121008" stroke="#D4AF37" stroke-width="1.6"/>
+        <path d="M12 4.5l6 2.8-1.4 8L12 18.8 7.4 15.3 6 7.3 12 4.5z" fill="none" stroke="#FACC15" stroke-width="1.6"/>
+        <path d="M9.2 10h5.6v2H11v3h3.2v1.8H9.2V10z" fill="#FDE047"/>
+      `;
+      break;
+    case "hle":
+      body = `
+        <circle cx="12" cy="12" r="10.2" fill="#170B04" stroke="#FF6B00" stroke-width="1.6"/>
+        <path d="M5 14c1.6-4.5 5.4-7.4 10.6-7.6-2.8 1.9-4.5 4-5.2 6.8 3.2-1.6 6-1.8 8.6-0.7-2.6 2.8-6.4 4.2-10.8 4-1.4-0.1-2.5-0.9-3.2-2.5z" fill="#FF6B00"/>
+        <circle cx="16.5" cy="8" r="1.7" fill="#FED7AA"/>
+      `;
+      break;
+    case "dk":
+      body = `
+        <polygon points="12,1.6 22,12 12,22.4 2,12" fill="#071819" stroke="#2DD4BF" stroke-width="1.6"/>
+        <path d="M7.2 7.5h4.2c2.5 0 4 1.6 4 4.5s-1.5 4.5-4 4.5H7.2V7.5zm2.2 2v5h1.9c1.2 0 1.9-.8 1.9-2.5s-.7-2.5-1.9-2.5H9.4z" fill="#FFFFFF"/>
+        <path d="M16.5 9.2v5.6M13.8 12h5.4" stroke="#2DD4BF" stroke-width="2" stroke-linecap="round"/>
+      `;
+      break;
+    case "kt":
+      body = `
+        <rect x="1.8" y="1.8" width="20.4" height="20.4" rx="5.5" fill="#150809" stroke="#EF4444" stroke-width="1.6"/>
+        <path d="M6.2 6.5h2.4v4.6l4.3-4.6h3l-4.6 4.8 4.9 6.2h-3L8.6 11.7v5.8H6.2V6.5z" fill="#F8FAFC"/>
+        <path d="M15.8 6.5h3.2l-1.2 2.5h1.4l-2.8 8.5h-2.1l1.8-6.2h-1.3l1-4.8z" fill="#EF4444"/>
+      `;
+      break;
+    case "bfx":
+      body = `
+        <polygon points="4,4 9.5,8.5 14.5,8.5 20,4 19,14.5 12,21.5 5,14.5" fill="#181406" stroke="#FACC15" stroke-width="1.6" stroke-linejoin="round"/>
+        <polygon points="7,9.5 10.5,12 7.5,13.5" fill="#FACC15"/>
+        <polygon points="17,9.5 13.5,12 16.5,13.5" fill="#FACC15"/>
+        <polygon points="10.2,16.2 13.8,16.2 12,18.6" fill="#FFFFFF"/>
+      `;
+      break;
+    case "ns":
+      body = `
+        <circle cx="12" cy="12" r="10" fill="#19070C" stroke="#F43F5E" stroke-width="1.6"/>
+        <path d="M7.2 16.5V7.5l2.4 0 4.8 5.4V7.5h2.4v9h-2.3l-4.9-5.5v5.5H7.2z" fill="#FFFFFF"/>
+        <path d="M6 18.2c2.2 1.8 9.8 1.8 12 0" stroke="#F43F5E" stroke-width="1.8" stroke-linecap="round"/>
+      `;
+      break;
+    case "drx":
+      body = `
+        <polygon points="12,1.8 21.2,6.4 19.6,17.2 12,22.2 4.4,17.2 2.8,6.4" fill="#081229" stroke="#3B82F6" stroke-width="1.6"/>
+        <path d="M6.8 7l5.2 5-5.2 5M17.2 7l-5.2 5 5.2 5" stroke="#60A5FA" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+        <circle cx="12" cy="12" r="1.6" fill="#FFFFFF"/>
+      `;
+      break;
+    case "bro":
+      body = `
+        <path d="M12 2l8 3.2v6.6c0 5-3.3 8.8-8 10.4-4.7-1.6-8-5.4-8-10.4V5.2L12 2z" fill="#07190E" stroke="#22C55E" stroke-width="1.6"/>
+        <path d="M9 7.2v9.6M15 7.2v9.6M9 12h6" stroke="#86EFAC" stroke-width="2.1" stroke-linecap="round"/>
+      `;
+      break;
+    case "dns":
+      body = `
+        <rect x="1.8" y="1.8" width="20.4" height="20.4" rx="10" fill="#081621" stroke="#38BDF8" stroke-width="1.6"/>
+        <path d="M6.2 9.5c2-2 4.2-2 5.8 0s3.8 2 5.8 0" stroke="#38BDF8" stroke-width="2" stroke-linecap="round"/>
+        <path d="M6.2 14.2c2-2 4.2-2 5.8 0s3.8 2 5.8 0" stroke="#E0F2FE" stroke-width="2" stroke-linecap="round"/>
+      `;
+      break;
+    default:
+      body = `
+        <circle cx="12" cy="12" r="9.5" fill="#0F172A" stroke="${color}" stroke-width="1.8"/>
+        <circle cx="12" cy="12" r="4" fill="${color}"/>
+      `;
+      break;
+  }
+  return `<svg class="lck-team-logo" viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" aria-hidden="true">${body}</svg>`;
 }
 
 /**
@@ -224,8 +347,20 @@ function getChampionAvatarSvg(champId, size = 26) {
       emblem = `<path d="M6 19L15 6" stroke="#94a3b8" stroke-width="2"/><path d="M15 6c3.5 0 5.5 2.5 5 6.5-2-2.5-4.5-3-7-2" fill="#14b8a6" fill-opacity="0.4" stroke="#5eead4" stroke-width="1.8"/>`;
       break;
     case "frost":
-    default:
       emblem = `<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke="#7dd3fc" stroke-width="1.8"/><polygon points="12,8 15.5,12 12,16 8.5,12" fill="#e0f2fe"/>`;
+      break;
+    case "chronos":
+      emblem = `<path d="M7 5h10L12 12l5 7H7l5-7-5-7z" fill="#2dd4bf" fill-opacity="0.28" stroke="#5eead4" stroke-width="1.8"/><circle cx="12" cy="12" r="2" fill="#fde047"/>`;
+      break;
+    case "thorn":
+      emblem = `<path d="M5 17C8 10 11 5 18 5c-1 5-4 10-8 14" stroke="#4ade80" stroke-width="2.1" fill="none"/><path d="M9 11l3-2M12 14l3-2M7 15l3-1" stroke="#bbf7d0" stroke-width="1.6"/>`;
+      break;
+    case "raigon":
+      emblem = `<path d="M6 18L18 6M15 5h4v4" stroke="#f59e0b" stroke-width="2.4"/><path d="M7 10l7 7" stroke="#fef3c7" stroke-width="1.8"/>`;
+      break;
+    case "volt":
+    default:
+      emblem = `<polygon points="13,3 6,13 12,13 11,21 18,11 12,11" fill="#38bdf8" fill-opacity="0.35" stroke="#7dd3fc" stroke-width="1.7"/>`;
       break;
   }
   return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="${col}" fill-opacity="0.16" stroke="${col}" stroke-opacity="0.55" stroke-width="1.2"/>${emblem}</svg>`;
@@ -322,8 +457,8 @@ function renderSeatRow(state, seat, labels) {
   return `
     <div class="seat-row ${isLocal ? "is-local" : ""} ${seat.isAI ? "is-ai" : "is-human"}">
       <div class="seat-info">
-        <span class="seat-dot" style="background:${seat.teamColor}"></span>
-        <span class="seat-abbr">${teamAbbr(seat.teamName)}</span>
+        ${getTeamLogoSvg(seat, 22)}
+        <span class="seat-abbr">${teamAbbr(seat)}</span>
         <div class="seat-name-wrap">
           <div class="seat-team-name">${escapeHtml(shortTeamName(seat.teamName))}</div>
           <div class="seat-coach-meta"><span class="num">${seat.wins}W ${seat.losses}L</span> · ${statusBadge}</div>
@@ -553,8 +688,12 @@ export function initHUD(callbacks) {
     if (hudCallbacks.getState) openSeatsModal(hudCallbacks.getState());
   });
   dom["btn-sfx-toggle"]?.addEventListener("click", () => hudCallbacks.onToggleSfx?.());
+  dom["btn-go-home"]?.addEventListener("click", () => hudCallbacks.onExitToLobby?.());
   dom["btn-go-hub"]?.addEventListener("click", () => hudCallbacks.onGoHub?.());
   dom["btn-copy-room"]?.addEventListener("click", copyRoomCode);
+  dom["lobby-resume-card"]?.addEventListener("click", (e) => {
+    if (e.target.closest("[data-resume-club]")) hudCallbacks.onResumeClub?.();
+  });
 
   dom["lobby-map-selector"]?.addEventListener("click", (e) => {
     const btn = e.target.closest("[data-select-map]");
@@ -733,6 +872,10 @@ export function initHUD(callbacks) {
       hudCallbacks.onToggleLiveOverride?.();
       return;
     }
+    if (e.target.closest("[data-coach-auto]")) {
+      hudCallbacks.onAutoCompleteDraft?.();
+      return;
+    }
     if (e.target.closest("[data-coach-step]")) {
       hudCallbacks.onCoachDraftStep?.();
     }
@@ -766,6 +909,10 @@ export function initHUD(callbacks) {
     }
   });
   dom["bottom-tactical-bar"]?.addEventListener("click", (e) => {
+    if (e.target.closest("[data-toggle-override]")) {
+      hudCallbacks.onToggleLiveOverride?.();
+      return;
+    }
     const btn = e.target.closest("[data-call]");
     if (!btn || btn.disabled) return;
     hudCallbacks.onTriggerCoachCall?.(btn.dataset.call);
@@ -779,6 +926,14 @@ export function initHUD(callbacks) {
     }
     if (e.target.closest("[data-exhibition-shuffle]")) {
       hudCallbacks.onShuffleExhibition?.();
+      return;
+    }
+    if (e.target.closest("[data-exhibition-replay]")) {
+      hudCallbacks.onReplaySameExhibition?.();
+      return;
+    }
+    if (e.target.closest("[data-go-home]")) {
+      hudCallbacks.onExitToLobby?.();
       return;
     }
     if (e.target.closest("[data-back-hub]")) {
@@ -821,18 +976,22 @@ export function renderHUD(state) {
   const sNum = state.seasonNumber || 1;
   const isArcade = state.roomMode === ROOM_MODES.ARCADE_2P;
   dom["top-week-badge"].textContent = state.screen === SCREEN_STATES.LOBBY
-    ? "LOBBY"
+    ? "HOME"
     : isArcade
-      ? "ARCADE Bo3"
+      ? "2P Bo3"
       : state.screen === SCREEN_STATES.STOVE_LEAGUE
         ? `S${sNum} STOVE`
         : state.playoffs?.active
-          ? `S${sNum} · PO Bo5`
+          ? `S${sNum} PO`
           : `S${sNum} · W${state.week}/${state.maxWeeks}`;
   dom["top-patch-badge"].textContent = `PATCH ${state.patchVersion}`;
-  dom["top-room-badge"].textContent = `ROOM ${state.roomCode || "----"}`;
-  dom["top-net-badge"].textContent = netMode === "NEON" ? "🟢 Neon 온라인" : "🟡 로컬 모드";
+  dom["top-room-badge"].textContent = `#${state.roomCode || "----"}`;
+  dom["top-net-badge"].textContent = netMode === "NEON" ? "● LIVE" : "● LOCAL";
   dom["top-net-badge"].className = `pill ${netMode === "NEON" ? "pill-neon" : "pill-local"}`;
+
+  if (dom["btn-go-home"]) {
+    dom["btn-go-home"].classList.toggle("hidden", state.screen === SCREEN_STATES.LOBBY);
+  }
 
   if (dom["btn-sfx-toggle"] && hudCallbacks.isSfxEnabled) {
     const sfxOn = hudCallbacks.isSfxEnabled();
@@ -928,8 +1087,30 @@ export const updateHUD = renderHUD;
 
 function renderLobbyScreen(state) {
   dom["lobby-room-status"].textContent = state.roomCode
-    ? `ROOM ${state.roomCode} · SEAT #${state.localSeatIndex + 1}`
+    ? `#${state.roomCode} · ${state.seats?.length || 10}구단`
     : "방 대기 중";
+
+  if (dom["lobby-resume-card"]) {
+    const mySeat = state.seats?.[state.localSeatIndex];
+    const hasActiveClub = Boolean(state.roomCode && mySeat);
+    dom["lobby-resume-card"].classList.toggle("hidden", !hasActiveClub);
+    if (hasActiveClub) {
+      const modeLabel = state.roomMode === ROOM_MODES.ARCADE_2P ? "2인 아케이드" : `${state.seats.length}구단 시즌 ${state.seasonNumber || 1}`;
+      const statusText = state.roomMode === ROOM_MODES.ARCADE_2P
+        ? "매치 대기실"
+        : state.playoffs?.active
+          ? "플레이오프 진행 중"
+          : `정규시즌 ${state.week}/${state.maxWeeks}주 · ${mySeat.wins}승 ${mySeat.losses}패`;
+      dom["lobby-resume-card"].innerHTML = `
+        <div class="resume-info">
+          <div class="resume-kicker">${modeLabel} · ROOM #${escapeHtml(state.roomCode)}</div>
+          <div class="resume-title">${getTeamLogoSvg(mySeat, 20)}${escapeHtml(shortTeamName(mySeat.teamName))}</div>
+          <div class="resume-sub">${statusText}</div>
+        </div>
+        <button class="btn btn-primary btn-sm" data-resume-club="1" type="button">이어하기 →</button>
+      `;
+    }
+  }
 
   if (dom["lobby-schedule-mode"]) {
     const curMode = state.scheduleMode || SCHEDULE_MODES.REALTIME_DAILY;
@@ -1002,10 +1183,10 @@ function renderWeeklyHub(state) {
   dom["hub-club-banner"].innerHTML = `
     <div class="hub-banner-top">
       <div class="hub-team-id">
-        <span class="team-abbr-chip" style="border-color:${mySeat.teamColor};color:${mySeat.teamColor}">${teamAbbr(mySeat.teamName)}</span>
+        <span class="team-crest-wrap" style="border-color:${mySeat.teamColor}">${getTeamLogoSvg(mySeat, 32)}</span>
         <div>
-          <div class="hub-team-title">${escapeHtml(shortTeamName(mySeat.teamName))}</div>
-          <div class="muted-text small">GM ${escapeHtml(mySeat.gmName || "Owner")} · 감독 ${escapeHtml(myCoach.name)} (EGO ${myCoach.stats.ego}%)</div>
+          <div class="hub-team-title">${escapeHtml(shortTeamName(mySeat.teamName))} <span class="team-tag-inline">${teamAbbr(mySeat)}</span></div>
+          <div class="muted-text small">${escapeHtml(mySeat.gmName || "구단주")} · 감독 ${escapeHtml(myCoach.name)} (EGO ${myCoach.stats.ego}%)</div>
         </div>
       </div>
       <div class="hub-ap-pill">AP ${apPips}</div>
@@ -1032,7 +1213,7 @@ function renderWeeklyHub(state) {
         const row = `
           <tr class="standings-row ${idx < 4 ? "playoff-cut" : ""} ${isMine}">
             <td class="rank-cell">${idx + 1}</td>
-            <td class="team-cell"><span class="team-bar" style="background:${s.teamColor}"></span><strong>${teamAbbr(s.teamName)}</strong> <span class="muted-text">${escapeHtml(shortTeamName(s.teamName))}</span></td>
+            <td class="team-cell"><span class="team-cell-inner">${getTeamLogoSvg(s, 18)}<strong>${teamAbbr(s)}</strong> <span class="muted-text">${escapeHtml(shortTeamName(s.teamName))}</span></span></td>
             <td><strong>${s.wins}-${s.losses}</strong></td>
             <td>${d >= 0 ? "+" : ""}${d}</td>
             <td>${winRate}%</td>
@@ -1066,9 +1247,9 @@ function renderWeeklyHub(state) {
           : `<span class="muted-text">VS</span>`;
         return `
           <div class="schedule-item ${isMine ? "my-match" : ""}">
-            <span class="sched-team"><i class="team-bar" style="background:${h.teamColor}"></i>${teamAbbr(h.teamName)}</span>
+            <span class="sched-team">${getTeamLogoSvg(h, 16)}${teamAbbr(h)}</span>
             ${score}
-            <span class="sched-team right">${teamAbbr(a.teamName)}<i class="team-bar" style="background:${a.teamColor}"></i></span>
+            <span class="sched-team right">${teamAbbr(a)}${getTeamLogoSvg(a, 16)}</span>
           </div>
         `;
       })
@@ -1501,10 +1682,10 @@ function renderDraftScreen(state) {
       const overrideOn = Boolean(state.liveOverride);
       dom["draft-coach-bar"].innerHTML = `
         <div class="draft-coach-top">
-          <span class="draft-coach-status">${overrideOn ? "✋ 구단주 긴급 개입 중" : `🤖 ${escapeHtml(myCoach.name)} 자동 지휘 중`}</span>
+          <span class="draft-coach-status">${overrideOn ? "✋ 구단주 긴급 개입 중" : `🎙️ ${escapeHtml(myCoach.name)} 자동 지휘 중`}</span>
           <div class="draft-coach-btns">
-            <button class="mini-btn ${overrideOn ? "is-override" : ""}" data-toggle-override="1" type="button">${overrideOn ? "감독위임 복귀" : "긴급 개입"}</button>
-            <button class="mini-btn" data-coach-step="1" type="button">감독 진행</button>
+            <button class="mini-btn ${overrideOn ? "is-override" : ""}" data-toggle-override="1" type="button">${overrideOn ? "감독위임" : "직접개입"}</button>
+            <button class="mini-btn" data-coach-auto="1" type="button">⚡ 즉시 완성</button>
           </div>
         </div>
         <div class="draft-coach-log">${escapeHtml(latestLog)}</div>
@@ -1631,7 +1812,8 @@ function renderCombatHUD(state) {
       : `${escapeHtml(mapDef.name)} · SET ${series.currentSet}/${series.bestOf}`;
   dom["combat-scoreboard"].innerHTML = `
     <div class="sb-team sb-blue">
-      <span class="sb-abbr">${teamAbbr(blueSeat?.teamName || "BLUE")}</span>
+      ${getTeamLogoSvg(blueSeat, 20)}
+      <span class="sb-abbr">${teamAbbr(blueSeat || "BLUE")}</span>
       <span class="sb-pips">${pips(series.blueWins, "blue-won")}</span>
       <span class="sb-score num">${series.blueWins}</span>
     </div>
@@ -1642,7 +1824,8 @@ function renderCombatHUD(state) {
     <div class="sb-team sb-red">
       <span class="sb-score num">${series.redWins}</span>
       <span class="sb-pips">${pips(series.redWins, "red-won")}</span>
-      <span class="sb-abbr">${teamAbbr(redSeat?.teamName || "RED")}</span>
+      <span class="sb-abbr">${teamAbbr(redSeat || "RED")}</span>
+      ${getTeamLogoSvg(redSeat, 20)}
     </div>
   `;
 
@@ -1704,14 +1887,17 @@ function renderCombatHUD(state) {
       const isExhibition = series.seriesMode === "EXHIBITION";
       dom["round-end-overlay"].innerHTML = `
         <div class="re-kicker">${isReplay ? `VOD SET ${series.currentSet}` : `SET ${series.currentSet} RESULT`}</div>
-        <div class="re-title ${combat.winnerTeam === "blue" ? "blue" : "red"}">${teamAbbr(winSeat?.teamName || combat.winnerTeam)} WIN</div>
-        <div class="muted-text">${escapeHtml(shortTeamName(winSeat?.teamName || ""))}${isExhibition ? " · 친선전" : isReplay ? ` · 리플레이 (${series.replaySetIndex + 1}/${series.replayTotalSets})` : ` · 시리즈 <span class="num">${series.blueWins} : ${series.redWins}</span>`}</div>
+        <div class="re-logo-row">${winSeat ? getTeamLogoSvg(winSeat, 40) : ""}</div>
+        <div class="re-title ${combat.winnerTeam === "blue" ? "blue" : "red"}">${teamAbbr(winSeat || combat.winnerTeam)} WIN</div>
+        <div class="muted-text">${escapeHtml(shortTeamName(winSeat?.teamName || ""))}${isExhibition ? " · 빠른 관전 매치" : isReplay ? ` · 리플레이 (${series.replaySetIndex + 1}/${series.replayTotalSets})` : ` · 시리즈 <span class="num">${series.blueWins} : ${series.redWins}</span>`}</div>
         <div class="re-actions">
           ${
             isExhibition
-              ? `<button class="btn btn-primary" data-exhibition-shuffle="1" type="button">랜덤 조합 재대결</button>
-                 <button class="btn btn-ghost" data-back-hub="1" type="button">허브로</button>`
-              : `<button class="btn btn-primary" data-round-next="${combat.winnerTeam}" type="button">${isReplay ? "다음 세트 VOD / 허브" : "다음 진행"}</button>`
+              ? `<button class="btn btn-primary" data-exhibition-shuffle="1" type="button">🔄 새 조합</button>
+                 <button class="btn btn-secondary" data-exhibition-replay="1" type="button">🔁 재대결</button>
+                 <button class="btn btn-ghost" data-go-home="1" type="button">🏠 홈으로</button>`
+              : `<button class="btn btn-primary" data-round-next="${combat.winnerTeam}" type="button">${isReplay ? "다음 / 허브" : "다음 진행 →"}</button>
+                 <button class="btn btn-ghost" data-go-home="1" type="button">🏠 홈으로</button>`
           }
         </div>
       `;
@@ -1734,10 +1920,13 @@ function renderCombatHUD(state) {
           return `<span class="energy-pip ${cls}"></span>`;
         }).join("");
         const cc = f.stunTimer > 0 ? `<span class="cc-tag">STUN</span>` : f.counterTimer > 0 ? `<span class="cc-tag gold">Q</span>` : "";
+        const nickMatch = String(f.playerName || "").match(/\(([^)]+)\)/);
+        const pTag = nickMatch ? nickMatch[1] : (f.playerName || "");
+        const unitLabel = pTag ? `${pTag}·${f.name || champ.shortName}` : (f.name || champ.shortName);
         return `
           <div class="fighter-mini-bar ${f.alive ? "" : "is-dead"} ${side}">
             <div class="fighter-mini-top">
-              <span class="fighter-mini-name">${getRoleSvg(f.role, champ.color, 11)}${escapeHtml(f.name || champ.shortName)}${cc}</span>
+              <span class="fighter-mini-name">${getRoleSvg(f.role, champ.color, 11)}${escapeHtml(unitLabel)}${cc}</span>
               <span class="num fighter-mini-stats">${f.alive ? `${Math.ceil(f.hp)}` : "KO"} · K${f.kills || 0} · ${Math.round(f.damageDealt || 0)}</span>
             </div>
             <div class="hp-track"><div class="hp-fill" style="width:${pct}%"></div></div>
@@ -1755,6 +1944,33 @@ function renderCombatHUD(state) {
   dom["ticker-list"].innerHTML = logs
     .map((l) => `<div class="ticker-item type-${escapeHtml(String(l.type || "INFO").toLowerCase())}"><span class="ticker-time num">${escapeHtml(l.time ?? "")}</span>${escapeHtml(l.text || l.msg || "")}</div>`)
     .join("");
+
+  const isArcadeMode = state.roomMode === ROOM_MODES.ARCADE_2P || series.seriesMode === "ARCADE_2P";
+  const showManualCalls = isArcadeMode || Boolean(state.liveOverride);
+  if (dom["owner-broadcast-bar"] && dom["tactical-calls-wrap"]) {
+    dom["owner-broadcast-bar"].classList.toggle("hidden", showManualCalls);
+    dom["tactical-calls-wrap"].classList.toggle("hidden", !showManualCalls);
+
+    if (!showManualCalls) {
+      const blueCoach = blueSeat?.headCoach || getHeadCoachById(blueSeat?.headCoachId);
+      const redCoach = redSeat?.headCoach || getHeadCoachById(redSeat?.headCoachId);
+      const blueCallId = combat.coachCalls?.blue?.activeCall || "ORB_FOCUS";
+      const redCallId = combat.coachCalls?.red?.activeCall || "ORB_FOCUS";
+      const blueCall = COACH_CALLS[blueCallId];
+      const redCall = COACH_CALLS[redCallId];
+      dom["owner-broadcast-bar"].innerHTML = `
+        <div class="obc-side">
+          <span class="obc-coach blue">${escapeHtml(blueCoach.name.split(" (")[0])} 감독</span>
+          <span class="obc-stance">${blueCall?.icon || "💠"} ${escapeHtml(blueCall?.name || "오브")}</span>
+        </div>
+        <button class="mini-btn" data-toggle-override="1" type="button">전술 개입</button>
+        <div class="obc-side right">
+          <span class="obc-stance">${redCall?.icon || "💠"} ${escapeHtml(redCall?.name || "오브")}</span>
+          <span class="obc-coach red">${escapeHtml(redCoach.name.split(" (")[0])} 감독</span>
+        </div>
+      `;
+    }
+  }
 
   for (const btn of dom["bottom-tactical-bar"].querySelectorAll("[data-call]")) {
     const callKey = btn.dataset.call;
@@ -1845,7 +2061,7 @@ function renderPlayoffScreen(state) {
 
   dom["playoff-header"].innerHTML = champSeat
     ? `<div class="po-kicker">SEASON CHAMPION</div>
-       <div class="po-title gold-text">${teamAbbr(champSeat.teamName)} · ${escapeHtml(shortTeamName(champSeat.teamName))}</div>
+       <div class="po-title gold-text">${getTeamLogoSvg(champSeat, 24)} ${teamAbbr(champSeat)} · ${escapeHtml(shortTeamName(champSeat.teamName))}</div>
        <div class="muted-text">감독 ${escapeHtml(champSeat.coachName)}</div>`
     : `<div class="po-kicker">TOP-4 PLAYOFFS · Bo5</div>
        <div class="po-title">${po.round === "SEMI_1" ? "SEMIFINAL 1 · 1위 vs 4위" : po.round === "SEMI_2" ? "SEMIFINAL 2 · 2위 vs 3위" : "GRAND FINAL"}</div>`;
@@ -1855,7 +2071,7 @@ function renderPlayoffScreen(state) {
     const a = m.awaySeat !== null ? state.seats[m.awaySeat] : null;
     const teamRow = (seat, sets, won) => `
       <div class="bracket-team-row ${won ? "winner" : ""}">
-        <span class="bracket-team">${seat ? `<i class="team-bar" style="background:${seat.teamColor}"></i><strong>${teamAbbr(seat.teamName)}</strong> <span class="muted-text">${escapeHtml(shortTeamName(seat.teamName))}</span>` : `<span class="muted-text">TBD</span>`}</span>
+        <span class="bracket-team">${seat ? `${getTeamLogoSvg(seat, 16)}<strong>${teamAbbr(seat)}</strong> <span class="muted-text">${escapeHtml(shortTeamName(seat.teamName))}</span>` : `<span class="muted-text">TBD</span>`}</span>
         <span class="num bracket-sets">${sets}</span>
       </div>`;
     return `
@@ -2050,9 +2266,10 @@ function renderArcadeLobbyScreen(state) {
     return `
       <div class="arcade-team-card ${sideCls}">
         <div class="card-header-row">
-          <div>
+          <div style="display:flex;align-items:center;gap:6px;">
+            ${getTeamLogoSvg(seat, 22)}
             <span class="pill ${sideCls === "is-blue" ? "pill-neon" : "pill-accent"}">${sideLabel}${isMine ? " · 내 진영" : ""}</span>
-            <strong style="margin-left:6px;">${escapeHtml(shortTeamName(seat.teamName))}</strong>
+            <strong>${escapeHtml(shortTeamName(seat.teamName))}</strong>
           </div>
           ${statusBadge}
         </div>

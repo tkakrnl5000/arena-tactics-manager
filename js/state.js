@@ -1,6 +1,6 @@
 /**
  * js/state.js
- * 순수 JSON 직렬화 가능 상태 트리, 12종 챔피언, 12종 Rite 카드, 5종 특성, 3종 감독 전술 콜 정의.
+ * 순수 JSON 직렬화 가능 상태 트리, 16종 챔피언, 12종 Rite 카드, 12명 감독, 10구단 리그 상태 정의.
  * DOM, Canvas, Network 의존성 없음.
  */
 
@@ -20,18 +20,20 @@ export const ROOM_MODES = Object.freeze({
   LEAGUE_6P: "LEAGUE_6P"
 });
 
+export const LEAGUE_TEAM_COUNT = 10;
+
 /**
- * 전체 전투 템포 조절 상수 (팀파이트 매니저·배틀라이트식의 차분하고 읽히는 교전 호흡)
+ * 전체 전투 템포 조절 상수 (배틀라이트식의 읽히는 포지셔닝·포킹·교전 호흡)
  */
 export const TEMPO_CONFIG = Object.freeze({
-  moveSpeedMult: 0.54,
-  projSpeedMult: 0.56,
-  cooldownMult: 1.75,
-  damageMult: 0.74,
-  roundDuration: 95.0,
-  suddenDeathTime: 65.0,
-  vortexShrinkRate: 3.2,
-  orbSpawnInterval: 20.0,
+  moveSpeedMult: 0.56,
+  projSpeedMult: 0.62,
+  cooldownMult: 1.48,
+  damageMult: 0.72,
+  roundDuration: 60.0,
+  suddenDeathTime: 36.0,
+  vortexShrinkRate: 3.4,
+  orbSpawnInterval: 18.0,
   coachCallDurationMult: 1.0
 });
 
@@ -280,7 +282,7 @@ export const COACH_CALLS = Object.freeze({
 });
 
 /**
- * 12종 챔피언 풀 정의
+ * 16종 챔피언 풀 정의 (배틀라이트 아레나 아키타입)
  */
 export const CHAMPIONS = {
   kylen: {
@@ -498,6 +500,78 @@ export const CHAMPIONS = {
     exSkill: { name: "EX 절대 영도", cost: 25, dmg: 100, cd: 1.5, range: 195, projSpeed: 410, effectType: "EX_FROST_NOVA", aoeRadius: 68 },
     ultSkill: { name: "블리자드", cost: 100, dmg: 195, range: 190, aoeRadius: 85 },
     patchMod: { dmgMult: 1.0, hpMult: 1.0, cdMult: 1.0 }
+  },
+  chronos: {
+    id: "chronos",
+    name: "크로노스 (Chronos)",
+    shortName: "크로노스",
+    role: "SUPPORT",
+    color: "#2dd4bf",
+    baseHp: 610,
+    moveSpeed: 132,
+    radius: 15,
+    preferredRange: 135,
+    m1: { name: "시간의 모래탄", dmg: 38, cd: 0.64, range: 175, projSpeed: 375, radius: 6, isMelee: false, energyGain: 8 },
+    m2: { name: "시간 역행 치유", dmg: 72, cd: 4.3, range: 185, projSpeed: 390, radius: 10, isMelee: false, healAlly: 82, slow: 1.2, energyGain: 15 },
+    space: { name: "타임 워프", cd: 5.5, dashDist: 105, duration: 0.18, shield: 55, dmg: 32, aoeRadius: 44 },
+    counterSkill: { name: "정지 시계결계", cd: 7.8, duration: 1.2, stunDuration: 1.05, effectType: "KNOCKBACK_HEAL", knockbackDist: 75, healSelf: 75, retaliateDmg: 52 },
+    exSkill: { name: "EX 시공간 폭발", cost: 25, dmg: 92, cd: 1.5, range: 175, projSpeed: 400, effectType: "EX_TEAM_SHIELD_BLAST", healTeam: 55, aoeRadius: 72 },
+    ultSkill: { name: "운명의 모래폭풍", cost: 100, dmg: 195, range: 185, aoeRadius: 88 },
+    patchMod: { dmgMult: 1.0, hpMult: 1.0, cdMult: 1.0 }
+  },
+  thorn: {
+    id: "thorn",
+    name: "쏜 (Thorn)",
+    shortName: "쏜",
+    role: "TANK",
+    color: "#4ade80",
+    baseHp: 830,
+    moveSpeed: 122,
+    radius: 16,
+    preferredRange: 48,
+    m1: { name: "가시 덩굴 채찍", dmg: 45, cd: 0.70, range: 54, projSpeed: 0, radius: 24, isMelee: true, energyGain: 8 },
+    m2: { name: "얽히는 뿌리창", dmg: 84, cd: 4.4, range: 180, projSpeed: 365, radius: 10, isMelee: false, slow: 1.4, energyGain: 15 },
+    space: { name: "지중 잠행", cd: 5.8, dashDist: 115, duration: 0.24, dmg: 52, aoeRadius: 56, shield: 60 },
+    counterSkill: { name: "가시 껍질 갑옷", cd: 7.5, duration: 1.25, stunDuration: 0.95, effectType: "REFLECT_PROJ", reflectMult: 1.35, retaliateDmg: 64 },
+    exSkill: { name: "EX 흡혈 뿌리", cost: 25, dmg: 98, cd: 1.5, range: 115, projSpeed: 0, effectType: "EX_TAUNT_SHIELD", healSelf: 72, aoeRadius: 74 },
+    ultSkill: { name: "고대 가시 감옥", cost: 100, dmg: 205, range: 150, aoeRadius: 86 },
+    patchMod: { dmgMult: 1.0, hpMult: 1.0, cdMult: 1.0 }
+  },
+  raigon: {
+    id: "raigon",
+    name: "라이건 (Raigon)",
+    shortName: "라이건",
+    role: "MELEE",
+    color: "#f59e0b",
+    baseHp: 710,
+    moveSpeed: 138,
+    radius: 15,
+    preferredRange: 44,
+    m1: { name: "창공 대검", dmg: 45, cd: 0.62, range: 50, projSpeed: 0, radius: 23, isMelee: true, energyGain: 7 },
+    m2: { name: "응징의 대지참", dmg: 88, cd: 4.1, range: 160, projSpeed: 420, radius: 10, isMelee: false, energyGain: 14 },
+    space: { name: "천공 도약 베기", cd: 5.4, dashDist: 112, duration: 0.21, dmg: 48, aoeRadius: 48 },
+    counterSkill: { name: "회전 검무 패링", cd: 7.4, duration: 1.25, stunDuration: 0.95, effectType: "BLADE_RIPOSTE", retaliateDmg: 74 },
+    exSkill: { name: "EX 승천 회전참", cost: 25, dmg: 108, cd: 1.5, range: 140, projSpeed: 440, effectType: "EX_DASH_LIFESTEAL", healSelf: 68 },
+    ultSkill: { name: "패왕 검결계", cost: 100, dmg: 205, range: 165, aoeRadius: 76 },
+    patchMod: { dmgMult: 1.0, hpMult: 1.0, cdMult: 1.0 }
+  },
+  volt: {
+    id: "volt",
+    name: "볼트 (Volt)",
+    shortName: "볼트",
+    role: "RANGED",
+    color: "#0ea5e9",
+    baseHp: 535,
+    moveSpeed: 140,
+    radius: 15,
+    preferredRange: 150,
+    m1: { name: "뇌전 구체", dmg: 39, cd: 0.56, range: 195, projSpeed: 410, radius: 5, isMelee: false, energyGain: 7 },
+    m2: { name: "천둥 창 관통", dmg: 96, cd: 4.5, range: 235, projSpeed: 520, radius: 7, isMelee: false, pierce: true, energyGain: 16 },
+    space: { name: "전격 점멸", cd: 5.4, dashDist: 108, duration: 0.16, shield: 40 },
+    counterSkill: { name: "정전기 방패", cd: 7.8, duration: 1.2, stunDuration: 0.9, effectType: "EM_SHIELD_PULSE", shieldSelf: 95, knockbackDist: 85 },
+    exSkill: { name: "EX 폭풍 연쇄탄", cost: 25, dmg: 54, cd: 1.5, range: 215, projSpeed: 470, effectType: "EX_TRIPLE_SHOT" },
+    ultSkill: { name: "천벌의 낙뢰", cost: 100, dmg: 215, range: 220, aoeRadius: 78 },
+    patchMod: { dmgMult: 1.0, hpMult: 1.0, cdMult: 1.0 }
   }
 };
 
@@ -548,110 +622,221 @@ export const AUTO_CALL_TRIGGERS = Object.freeze({
 export const HEAD_COACHES = [
   {
     id: "coach_koma",
-    name: "코마 (Koma)",
+    name: "김정균 (kkOma)",
     title: "황금 왕조 설계자",
     philosophy: "ORB_MASTER",
     signatureChamp: "orion",
     salary: 420,
     bark: "오브 타이밍은 오리온이 지배합니다. 구단주님, 지금 판은 내게 맡기시죠!",
-    stats: { draftInsight: 88, callSense: 92, riteSense: 86, ego: 20 }
+    matchBarks: [
+      "중앙 오브 5초 전입니다! 스태프 전부 미드 합류하세요!",
+      "불리한 싸움 절대 피하고 아군 포지션부터 다시 잡습니다.",
+      "지금 100 에너지 궁극기 연동! 바로 한타 엽시다!"
+    ],
+    stats: { draftInsight: 90, callSense: 94, riteSense: 88, ego: 20 }
+  },
+  {
+    id: "coach_kim",
+    name: "김정수 (KIM)",
+    title: "챔피언스 템포 지휘관",
+    philosophy: "ROOKIE_MENTOR",
+    signatureChamp: "lyra",
+    salary: 415,
+    bark: "기본기와 시야·거리 조절만 무너지지 않으면 젠지 스타일은 절대 지지 않습니다!",
+    matchBarks: [
+      "체력 낮은 선수 뒤로 빼고 라이라 케어 받으세요!",
+      "상대 반격 쿨타임 빠졌습니다. 지금 교전 걸어도 됩니다!",
+      "서든데스 들어가도 당황하지 말고 중앙 장악하세요."
+    ],
+    stats: { draftInsight: 89, callSense: 91, riteSense: 88, ego: 24 }
+  },
+  {
+    id: "coach_homme",
+    name: "윤성영 (Homme)",
+    title: "오브·교전 설계의 대가",
+    philosophy: "ORB_MASTER",
+    signatureChamp: "raigon",
+    salary: 410,
+    bark: "아레나는 기본기와 오브 싸움입니다. 라이건 패링 각을 보세요!",
+    matchBarks: [
+      "중앙 오브 3초 전! 스킬 아껴뒀다 막타 동시에 꽂아!",
+      "상대 Space 빠졌어! 지금 라인 올리고 압박!",
+      "기본 콤보 이후 무조건 빠져서 체력 관리해."
+    ],
+    stats: { draftInsight: 92, callSense: 90, riteSense: 87, ego: 28 }
   },
   {
     id: "coach_cvmax",
-    name: "씨맥 (cvMax)",
+    name: "김대호 (cvMax)",
     title: "광기의 천재 전술가",
     philosophy: "JOKER_GAMBLER",
     signatureChamp: "nyx",
     salary: 380,
     bark: "정석은 깨라고 있는 겁니다! 내 시그니처 닉스로 판을 뒤집겠습니다!",
-    stats: { draftInsight: 90, callSense: 80, riteSense: 76, ego: 78 }
-  },
-  {
-    id: "coach_hirai",
-    name: "히라이 (Hirai)",
-    title: "철벽 데이터 감독",
-    philosophy: "DATA_ANALYST",
-    signatureChamp: "vex",
-    salary: 350,
-    bark: "확률 68.4% 우위! 데이터는 거짓말을 하지 않습니다.",
-    stats: { draftInsight: 86, callSense: 79, riteSense: 88, ego: 25 }
+    matchBarks: [
+      "상대 뒤를 치세요! 닉스 은신 각이 지금 딱 열렸습니다!",
+      "반격 켜진 적 치지 말고 옆에서 각 재다가 EX 꽂으세요!",
+      "한 명만 끊으면 바로 이깁니다! 과감하게 들이박아요!"
+    ],
+    stats: { draftInsight: 90, callSense: 82, riteSense: 78, ego: 74 }
   },
   {
     id: "coach_score",
-    name: "스코어 (Score)",
-    title: "정글러 출신 베테랑",
+    name: "고동빈 (Score)",
+    title: "정글러 출신 승부사",
     philosophy: "ORB_MASTER",
     signatureChamp: "kylen",
-    salary: 360,
+    salary: 375,
     bark: "한타 각이 보였습니다. 카일렌으로 선봉을 찢고 들어갑니다!",
-    stats: { draftInsight: 82, callSense: 89, riteSense: 82, ego: 35 }
+    matchBarks: [
+      "중앙 오브 스틸 각! 카일렌 질풍참 아껴두세요!",
+      "원거리 딜러 물기 전에 상대 서포터 시선부터 끄세요.",
+      "에너지 50 찼습니다! EX 혈풍섬으로 피흡 전환!"
+    ],
+    stats: { draftInsight: 84, callSense: 90, riteSense: 84, ego: 34 }
   },
   {
-    id: "coach_daeny",
-    name: "대니 (Daeny)",
-    title: "밴픽 신의 손",
+    id: "coach_ryu",
+    name: "유상욱 (Ryu)",
+    title: "예리한 교전 설계자",
+    philosophy: "JOKER_GAMBLER",
+    signatureChamp: "sylvia",
+    salary: 340,
+    bark: "지금 각엔 실비아 원거리 포킹 조커 픽이 무조건 먹힙니다. 믿으세요!",
+    matchBarks: [
+      "실비아 궁극기 각 열렸다! 벽 끼고 원거리에서 긁으세요!",
+      "상대 근딜 들어오면 질풍 반격으로 바로 카운터!",
+      "오브 막타 싸움 절대 지지 마세요!"
+    ],
+    stats: { draftInsight: 83, callSense: 84, riteSense: 82, ego: 48 }
+  },
+  {
+    id: "coach_dandy",
+    name: "최인규 (DanDy)",
+    title: "정밀 타이밍의 마술사",
     philosophy: "DATA_ANALYST",
-    signatureChamp: "frost",
-    salary: 390,
-    bark: "상대 조합의 약점을 읽었습니다. 프로스트로 아레나를 얼려버리죠.",
-    stats: { draftInsight: 94, callSense: 81, riteSense: 90, ego: 52 }
+    signatureChamp: "vex",
+    salary: 365,
+    bark: "상대 스킬 쿨다운이 0.5초 남았습니다. 지금 정밀 타격 들어갑니다!",
+    matchBarks: [
+      "벡스 레일건으로 체력 빠진 적부터 끊어내세요!",
+      "석주 뒤로 숨어서 쿨타임 리셋하고 다시 쏩니다.",
+      "오브 출현! 전 팀원 미드로 각도 좁히세요!"
+    ],
+    stats: { draftInsight: 87, callSense: 86, riteSense: 88, ego: 26 }
+  },
+  {
+    id: "coach_ssong",
+    name: "김상수 (SSONG)",
+    title: "전격 템포 마술사",
+    philosophy: "JOKER_GAMBLER",
+    signatureChamp: "volt",
+    salary: 350,
+    bark: "상대가 숨 고를 틈 없이 볼트의 뇌전 포킹으로 숨통을 조입니다!",
+    matchBarks: [
+      "상대 반격 켜졌어! 쏘지 말고 페이크 걸고 빼!",
+      "볼트 각 열렸다! 관통 창으로 둘 동시 견제!",
+      "저체력 하나 잘라먹고 오브 돌리자!"
+    ],
+    stats: { draftInsight: 85, callSense: 85, riteSense: 83, ego: 44 }
   },
   {
     id: "coach_edgar",
-    name: "에드가 (Edgar)",
+    name: "최우범 (Edgar)",
     title: "후반 수성의 명장",
     philosophy: "ROOKIE_MENTOR",
     signatureChamp: "balrog",
-    salary: 320,
+    salary: 330,
     bark: "서두르지 않습니다. 발록을 앞세워 끝까지 버티면 이깁니다.",
-    stats: { draftInsight: 78, callSense: 84, riteSense: 85, ego: 18 }
+    matchBarks: [
+      "무리하지 말고 탱커 뒤에서 끝까지 버티세요!",
+      "외곽 힐 성소 밟고 최대 체력 손실 막아냅니다!",
+      "반격 쿨 돌았습니다. 역습 한 방으로 끝내죠!"
+    ],
+    stats: { draftInsight: 80, callSense: 85, riteSense: 86, ego: 18 }
   },
   {
-    id: "coach_noffe",
-    name: "노페 (NoFe)",
-    title: "변칙 카운터 장인",
-    philosophy: "JOKER_GAMBLER",
-    signatureChamp: "sylvia",
-    salary: 300,
-    bark: "지금 각엔 실비아 조커 픽이 무조건 먹힙니다. 믿으세요!",
-    stats: { draftInsight: 81, callSense: 76, riteSense: 80, ego: 64 }
+    id: "coach_odin",
+    name: "주영달 (oDin)",
+    title: "돌파형 전술 감독",
+    philosophy: "DATA_ANALYST",
+    signatureChamp: "chronos",
+    salary: 335,
+    bark: "시간 차 변수가 핵심입니다. 크로노스로 상대 템포를 완전히 끊죠.",
+    matchBarks: [
+      "상대 핵심 스킬 전부 체크했어! 지금 25 에너지 EX 타이밍!",
+      "벽 끼고 포킹 유지해, 조급할 필요 전혀 없어.",
+      "정지 결계 적중! 바로 후속 궁극기 연계!"
+    ],
+    stats: { draftInsight: 86, callSense: 83, riteSense: 85, ego: 38 }
   },
   {
-    id: "coach_mad",
-    name: "매드라이프 (Mad)",
-    title: "수호와 반격의 스승",
+    id: "coach_bengi",
+    name: "배성웅 (Bengi)",
+    title: "대지의 수호자 · 정글의 신",
     philosophy: "ROOKIE_MENTOR",
-    signatureChamp: "lyra",
-    salary: 280,
-    bark: "라이라의 별빛 수호로 우리 딜러진은 단 한 명도 내주지 않습니다!",
-    stats: { draftInsight: 75, callSense: 88, riteSense: 83, ego: 30 }
+    signatureChamp: "thorn",
+    salary: 390,
+    bark: "흔들리지 않는 앞선 쏜으로 아군 딜러가 편하게 숨 쉬게 만듭니다.",
+    matchBarks: [
+      "침착해. 상대 반격 빠진 거 확인하고 들어가도 늦지 않아.",
+      "외곽 치유 오브부터 먼저 먹고 한타 재정비하자.",
+      "팀원 끼리 각도 넓히고 쏜이 앞라인 잡아줘!"
+    ],
+    stats: { draftInsight: 85, callSense: 91, riteSense: 86, ego: 16 }
+  },
+  {
+    id: "coach_daeny",
+    name: "양대인 (Daeny)",
+    title: "밴픽 신의 손",
+    philosophy: "DATA_ANALYST",
+    signatureChamp: "frost",
+    salary: 395,
+    bark: "상대 조합의 약점을 읽었습니다. 프로스트로 아레나를 얼려버리죠.",
+    matchBarks: [
+      "빙결 장막으로 상대 돌진 동선 완전히 차단하세요!",
+      "리커버리 체력 지켜가면서 사거리 싸움 유지!",
+      "지금 오브 강타 타이밍! 스킬 겹쳐 쓰세요!"
+    ],
+    stats: { draftInsight: 95, callSense: 82, riteSense: 90, ego: 52 }
   }
 ];
 
 const TEAM_PRESETS = [
-  { teamName: "서울 노바 (Seoul Nova)", teamColor: "#3b82f6", coachName: "Host Coach", isAI: false },
-  { teamName: "부산 타이탄즈 (Busan Titans)", teamColor: "#ef4444", coachName: "AI Coach Kang", isAI: true },
-  { teamName: "인천 스톰 (Incheon Storm)", teamColor: "#22c55e", coachName: "AI Coach Park", isAI: true },
-  { teamName: "대구 블레이즈 (Daegu Blaze)", teamColor: "#f97316", coachName: "AI Coach Kim", isAI: true },
-  { teamName: "대전 미라지 (Daejeon Mirage)", teamColor: "#a855f7", coachName: "AI Coach Lee", isAI: true },
-  { teamName: "광주 발키리 (Gwangju Valkyrie)", teamColor: "#06b6d4", coachName: "AI Coach Choi", isAI: true }
+  { shortTag: "T1", logoId: "t1", teamName: "T1 (T1)", teamColor: "#E4002B", coachName: "김정균 (kkOma)", isAI: false },
+  { shortTag: "GEN", logoId: "gen", teamName: "젠지 (Gen.G)", teamColor: "#AA8A00", coachName: "김정수 (KIM)", isAI: true },
+  { shortTag: "HLE", logoId: "hle", teamName: "한화생명 (HLE)", teamColor: "#FF6B00", coachName: "윤성영 (Homme)", isAI: true },
+  { shortTag: "DK", logoId: "dk", teamName: "디플러스 기아 (DK)", teamColor: "#2DD4BF", coachName: "김대호 (cvMax)", isAI: true },
+  { shortTag: "KT", logoId: "kt", teamName: "KT 롤스터 (KT)", teamColor: "#EF4444", coachName: "고동빈 (Score)", isAI: true },
+  { shortTag: "BFX", logoId: "bfx", teamName: "BNK 피어엑스 (BFX)", teamColor: "#FACC15", coachName: "유상욱 (Ryu)", isAI: true },
+  { shortTag: "NS", logoId: "ns", teamName: "농심 레드포스 (NS)", teamColor: "#F43F5E", coachName: "최인규 (DanDy)", isAI: true },
+  { shortTag: "DRX", logoId: "drx", teamName: "DRX (DRX)", teamColor: "#3B82F6", coachName: "김상수 (SSONG)", isAI: true },
+  { shortTag: "BRO", logoId: "bro", teamName: "한진 브리온 (BRO)", teamColor: "#22C55E", coachName: "최우범 (Edgar)", isAI: true },
+  { shortTag: "DNS", logoId: "dns", teamName: "DN 수퍼스 (DNS)", teamColor: "#38BDF8", coachName: "주영달 (oDin)", isAI: true }
 ];
 
 const PLAYER_NAMES = [
-  ["FakerLite", "KeriaJr", "ZeusPeak", "OnerAce"],
-  ["ChovyEcho", "CanyonX", "KiinWall", "PeyzShot"],
-  ["DeftArc", "BerylMind", "ShowMake", "LucidSky"],
-  ["ViperFang", "ZekaDash", "DoranShield", "DelightK"],
-  ["GumayusiV", "RulerAim", "KuroBlade", "LehendsG"],
-  ["BddSpark", "AimingPro", "PyosikW", "KellInS"]
+  ["이상혁 (Faker)", "류민석 (Keria)", "문현준 (Oner)", "최현준 (Doran)"],
+  ["정지훈 (Chovy)", "김건부 (Canyon)", "박재혁 (Ruler)", "김기인 (Kiin)"],
+  ["최우제 (Zeus)", "김건우 (Zeka)", "이민형 (Gumayusi)", "유환중 (Delight)"],
+  ["허수 (ShowMaker)", "최용혁 (Lucid)", "전시우 (Siwoo)", "신금재 (Smash)"],
+  ["곽보성 (Bdd)", "문우찬 (Cuzz)", "이승민 (PerfecT)", "김하람 (Aiming)"],
+  ["송현민 (Clear)", "전어진 (Raptor)", "이대광 (VicLa)", "김형규 (Kellin)"],
+  ["황성훈 (Kingen)", "이예찬 (Scout)", "손시우 (Lehends)", "배영준 (Sponge)"],
+  ["이재원 (Rich)", "손우현 (Ucal)", "박진성 (Teddy)", "손민우 (Pleata)"],
+  ["박기태 (Morgan)", "김민성 (GIDEON)", "조우진 (Roamer)", "남궁성훈 (Namgung)"],
+  ["이동주 (DuDu)", "홍창현 (Pyosik)", "이주현 (Clozer)", "서대길 (deokdam)"]
 ];
 
 const FA_PRESETS = [
-  { name: "ClozerNova", stats: { mechanics: 84, reflex: 82, teamwork: 75, mental: 78 }, trait: "clutch_gene", cost: 450, fav: ["kylen", "nyx", "shade"] },
-  { name: "GhostWall", stats: { mechanics: 76, reflex: 80, teamwork: 88, mental: 86 }, trait: "counter_master", cost: 400, fav: ["balrog", "titan", "solaris"] },
-  { name: "TeddyArc", stats: { mechanics: 86, reflex: 77, teamwork: 78, mental: 81 }, trait: "orb_hunter", cost: 500, fav: ["sylvia", "vex", "orion"] },
-  { name: "LifeSpark", stats: { mechanics: 75, reflex: 84, teamwork: 85, mental: 80 }, trait: "lone_wolf", cost: 380, fav: ["lyra", "solaris", "frost"] },
-  { name: "MorganFlame", stats: { mechanics: 88, reflex: 79, teamwork: 71, mental: 74 }, trait: "glass_cannon", cost: 550, fav: ["ignis", "orion", "kylen"] }
+  { name: "박도현 (Viper)", stats: { mechanics: 88, reflex: 85, teamwork: 79, mental: 82 }, trait: "clutch_gene", cost: 520, fav: ["kylen", "raigon", "nyx"] },
+  { name: "김혁규 (Deft)", stats: { mechanics: 84, reflex: 82, teamwork: 88, mental: 90 }, trait: "counter_master", cost: 480, fav: ["sylvia", "vex", "volt"] },
+  { name: "조건희 (BeryL)", stats: { mechanics: 79, reflex: 85, teamwork: 91, mental: 87 }, trait: "orb_hunter", cost: 450, fav: ["lyra", "chronos", "solaris"] },
+  { name: "이승용 (Tarzan)", stats: { mechanics: 86, reflex: 86, teamwork: 84, mental: 82 }, trait: "orb_hunter", cost: 490, fav: ["thorn", "balrog", "kylen"] },
+  { name: "김수환 (Peyz)", stats: { mechanics: 89, reflex: 83, teamwork: 77, mental: 78 }, trait: "glass_cannon", cost: 550, fav: ["volt", "sylvia", "ignis"] },
+  { name: "서진혁 (Kanavi)", stats: { mechanics: 87, reflex: 85, teamwork: 83, mental: 81 }, trait: "lone_wolf", cost: 510, fav: ["raigon", "shade", "nyx"] },
+  { name: "정지우 (Jiwoo)", stats: { mechanics: 86, reflex: 81, teamwork: 76, mental: 79 }, trait: "glass_cannon", cost: 440, fav: ["vex", "frost", "orion"] },
+  { name: "김태윤 (Taeyoon)", stats: { mechanics: 83, reflex: 80, teamwork: 78, mental: 80 }, trait: "clutch_gene", cost: 390, fav: ["orion", "frost", "ignis"] }
 ];
 
 const TRAIT_KEYS = Object.keys(TRAITS);
@@ -816,12 +1001,16 @@ export function getHeadCoachById(coachId) {
 
 export function createDefaultBanPickNote(seatIdx = 0) {
   const presets = [
-    { mustBans: ["nyx", "frost"], priorityPicks: ["kylen", "orion"], counterStrategy: "AUTO_COUNTER", ritePreference: "ORB", autoCallTrigger: "ORB_SPAWN" },
-    { mustBans: ["orion", "sylvia"], priorityPicks: ["balrog", "ignis"], counterStrategy: "DIVE_COMP", ritePreference: "SURVIVAL", autoCallTrigger: "LOW_HP_DEFENSE" },
-    { mustBans: ["kylen", "nyx"], priorityPicks: ["sylvia", "vex"], counterStrategy: "POKE_CONTROL", ritePreference: "ORB", autoCallTrigger: "ORB_SPAWN" },
-    { mustBans: ["balrog", "titan"], priorityPicks: ["ignis", "shade"], counterStrategy: "DIVE_COMP", ritePreference: "ENERGY", autoCallTrigger: "EARLY_EX_RUSH" },
+    { mustBans: ["nyx", "frost"], priorityPicks: ["raigon", "orion"], counterStrategy: "AUTO_COUNTER", ritePreference: "ORB", autoCallTrigger: "ORB_SPAWN" },
+    { mustBans: ["orion", "volt"], priorityPicks: ["thorn", "ignis"], counterStrategy: "DIVE_COMP", ritePreference: "SURVIVAL", autoCallTrigger: "LOW_HP_DEFENSE" },
+    { mustBans: ["kylen", "nyx"], priorityPicks: ["sylvia", "chronos"], counterStrategy: "POKE_CONTROL", ritePreference: "ORB", autoCallTrigger: "ORB_SPAWN" },
+    { mustBans: ["balrog", "titan"], priorityPicks: ["volt", "shade"], counterStrategy: "DIVE_COMP", ritePreference: "ENERGY", autoCallTrigger: "EARLY_EX_RUSH" },
     { mustBans: ["vex", "sylvia"], priorityPicks: ["orion", "frost"], counterStrategy: "POKE_CONTROL", ritePreference: "ENERGY", autoCallTrigger: "EARLY_EX_RUSH" },
-    { mustBans: ["ignis", "kylen"], priorityPicks: ["lyra", "solaris"], counterStrategy: "PROTECT_CARRY", ritePreference: "COUNTER", autoCallTrigger: "LOW_HP_DEFENSE" }
+    { mustBans: ["ignis", "raigon"], priorityPicks: ["lyra", "solaris"], counterStrategy: "PROTECT_CARRY", ritePreference: "COUNTER", autoCallTrigger: "LOW_HP_DEFENSE" },
+    { mustBans: ["chronos", "nyx"], priorityPicks: ["volt", "thorn"], counterStrategy: "POKE_CONTROL", ritePreference: "ORB", autoCallTrigger: "ORB_SPAWN" },
+    { mustBans: ["thorn", "balrog"], priorityPicks: ["raigon", "vex"], counterStrategy: "AUTO_COUNTER", ritePreference: "COUNTER", autoCallTrigger: "LOW_HP_DEFENSE" },
+    { mustBans: ["frost", "volt"], priorityPicks: ["shade", "chronos"], counterStrategy: "DIVE_COMP", ritePreference: "ENERGY", autoCallTrigger: "EARLY_EX_RUSH" },
+    { mustBans: ["raigon", "sylvia"], priorityPicks: ["titan", "lyra"], counterStrategy: "PROTECT_CARRY", ritePreference: "SURVIVAL", autoCallTrigger: "LOW_HP_DEFENSE" }
   ];
   const base = presets[seatIdx % presets.length] || presets[0];
   return {
@@ -923,8 +1112,8 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
 
   const basePresets = isArcade
     ? [
-        { teamName: "블루 아케인 (Blue Arcane)", teamColor: "#38bdf8", coachName: "Blue Challenger", isAI: false },
-        { teamName: "레드 크림슨 (Red Crimson)", teamColor: "#f43f5e", coachName: "Red Rival AI", isAI: true }
+        { ...TEAM_PRESETS[0], isAI: false },
+        { ...TEAM_PRESETS[1], isAI: true }
       ]
     : TEAM_PRESETS;
 
@@ -935,10 +1124,12 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
     const seatObj = {
       seatIndex: idx,
       teamId: `team_${idx}`,
+      shortTag: preset.shortTag || `T${idx + 1}`,
+      logoId: preset.logoId || `t${idx}`,
       teamName: preset.teamName,
       teamColor: preset.teamColor,
-      gmName: preset.isAI ? `GM #${idx + 1}` : preset.coachName,
-      coachName: isArcade ? preset.coachName : coach.name,
+      gmName: preset.isAI ? "AI 구단주" : "구단주 (Owner)",
+      coachName: coach.name,
       headCoachId: coach.id,
       headCoach: { ...coach, stats: { ...coach.stats } },
       banPickNote: createDefaultBanPickNote(idx),
@@ -978,11 +1169,12 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
     version: 1,
     roomCode: code,
     roomMode: validRoomMode,
+    ownerControlMode: isArcade ? "DIRECT" : "SPECTATOR",
     localSeatIndex: 0,
     screen: SCREEN_STATES.LOBBY,
     seasonNumber: 1,
     week: 1,
-    maxWeeks: 5,
+    maxWeeks: isArcade ? 1 : LEAGUE_TEAM_COUNT - 1,
     scheduleMode: isArcade ? SCHEDULE_MODES.INSTANT_TEST : validMode,
     seasonBaseTimeMs: nowMs,
     liveOverride: isArcade,
@@ -994,7 +1186,7 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
     dailyNewsHistory: [],
     seats,
     faPool: createInitialFAPool(),
-    schedule: isArcade ? [] : buildInitialSchedule(6, nowMs, validMode, code),
+    schedule: isArcade ? [] : buildInitialSchedule(LEAGUE_TEAM_COUNT, nowMs, validMode, code),
     activeMatch: {
       callEvents: [],
       ritePicks: { blue: null, red: null },
@@ -1012,7 +1204,7 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
         homeSets: 0,
         awaySets: 0,
         winnerSeat: null,
-        scheduledAt: computeRoundScheduledAt(nowMs, 5, validMode),
+        scheduledAt: computeRoundScheduledAt(nowMs, LEAGUE_TEAM_COUNT - 1, validMode),
         matchSeed: hashSeed(`${code}_po_semi1`)
       },
       semi2: {
@@ -1021,7 +1213,7 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
         homeSets: 0,
         awaySets: 0,
         winnerSeat: null,
-        scheduledAt: computeRoundScheduledAt(nowMs, 5, validMode),
+        scheduledAt: computeRoundScheduledAt(nowMs, LEAGUE_TEAM_COUNT - 1, validMode),
         matchSeed: hashSeed(`${code}_po_semi2`)
       },
       final: {
@@ -1030,7 +1222,7 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
         homeSets: 0,
         awaySets: 0,
         winnerSeat: null,
-        scheduledAt: computeRoundScheduledAt(nowMs, 6, validMode),
+        scheduledAt: computeRoundScheduledAt(nowMs, LEAGUE_TEAM_COUNT, validMode),
         matchSeed: hashSeed(`${code}_po_final`)
       },
       championSeat: null

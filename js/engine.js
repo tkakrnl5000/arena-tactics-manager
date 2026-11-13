@@ -124,11 +124,15 @@ function buildFighter(state, team, seatIdx, slotIdx, champId, x, y, facing) {
     radius: champ.radius || 15,
     hp: maxHp,
     maxHp,
+    recoveryHp: maxHp,
     shield: 0,
     energy: 0,
     maxEnergy: 100,
     alive: true,
     state: "IDLE",
+    aiMode: "POKE",
+    retreatTimer: 0,
+    lastDamageAt: 0,
     stunTimer: 0,
     counterTimer: 0,
     stealthTimer: 0,
@@ -353,7 +357,8 @@ function computeDamageMultiplier(state, attacker, target, isOrb = false) {
 
 function healFighter(fighter, amount, state, showText = false) {
   if (!fighter.alive || amount <= 0) return;
-  const actual = Math.min(fighter.maxHp - fighter.hp, Math.round(amount));
+  const maxRecover = Math.min(fighter.maxHp, fighter.recoveryHp ?? fighter.maxHp);
+  const actual = Math.max(0, Math.min(maxRecover - fighter.hp, Math.round(amount)));
   fighter.hp += actual;
 }
 
@@ -392,6 +397,13 @@ function applyRawDamage(state, target, amount, attacker = null) {
 
   target.hp = Math.max(0, target.hp - remaining);
   if (remaining > 0) {
+    target.lastDamageAt = state.combat.elapsed || 0;
+    // 배틀라이트 리커버리 체력(최대 회복 한도) 잠식: 현재 체력 + 16% 여유분 초과 피해 시 영구 침식
+    const margin = Math.round(target.maxHp * 0.16);
+    const currentRec = target.recoveryHp ?? target.maxHp;
+    if (currentRec - target.hp > margin) {
+      target.recoveryHp = Math.max(target.hp + margin, Math.round(currentRec - remaining * 0.52));
+    }
     pushCombatSfx(state, "HIT_IMPACT");
   }
   if (attacker) {
@@ -655,7 +667,9 @@ function hitCenterOrb(state, attacker, dmg) {
     for (const f of state.combat.fighters) {
       if (f.alive && f.team === attacker.team) {
         grantEnergy(state, f, energyReward);
-        healFighter(f, hpReward, state, false);
+        const recRestore = Math.round(f.maxHp * 0.08);
+        f.recoveryHp = Math.min(f.maxHp, (f.recoveryHp ?? f.maxHp) + recRestore);
+        healFighter(f, Math.max(hpReward, Math.round(f.maxHp * 0.10)), state, false);
       }
     }
 
@@ -993,7 +1007,47 @@ function executeUltimate(state, fighter) {
 }
 
 /**
- * 스티어링 벡터 Utility AI 평가
+ * 아레나 석주 장애물 시야(LOS) 차단 판정
+ */
+function hasLineOfSight(arena, x1, y1, x2, y2) {
+  const pillars = arena?.pillars;
+  if (!pillars || pillars.length === 0) return true;
+  const dx = x2 - x1;
+  const dy = y2 - y1;
+  const lenSq = dx * dx + dy * dy;
+  if (lenSq < 1) return true;
+
+  for (let i = 0; i < pillars.length; i++) {
+    const p = pillars[i];
+    const t = clamp(((p.x - x1) * dx + (p.y - y1) * dy) / lenSq, 0.04, 0.96);
+    const px = x1 + t * dx;
+    const py = y1 + t * dy;
+    const blockR = p.radius + 3;
+    if ((px - p.x) * (px - p.x) + (py - p.y) * (py - p.y) <= blockR * blockR) {
+      return false;
+    }
+  }
+  return true;
+}
+
+/**
+ * 이동 중인 적에 대한 배틀라이트식 예측 샷(Leading Aim) 각도 계산
+ */
+function computeLeadAimAngle(fighter, target, projSpeed, maxLeadSec = 0.50) {
+  if (!projSpeed || projSpeed <= 0 || (!target.vx && !target.vy)) {
+    return Math.atan2(target.y - fighter.y, target.x - fighter.x);
+  }
+  const d = dist(fighter.x, fighter.y, target.x, target.y);
+  const effectiveSpeed = Math.max(80, projSpeed * TEMPO_CONFIG.projSpeedMult);
+  const skillFactor = clamp(0.50 + (fighter.stats?.mechanics || 75) * 0.0052, 0.55, 0.96);
+  const tLead = clamp(d / effectiveSpeed, 0, maxLeadSec) * skillFactor;
+  const predX = target.x + (target.vx || 0) * tLead;
+  const predY = target.y + (target.vy || 0) * tLead;
+  return Math.atan2(predY - fighter.y, predX - fighter.x);
+}
+
+/**
+ * 배틀라이트 프로게이머급 AI (예측 에임 · 석주 엄폐/시야 피킹 · 반격 홀드 · 저체력 이탈 리셋 · 오브 막타 각)
  */
 export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   const champ = getChampionById(fighter.champId);
@@ -1001,18 +1055,20 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   const orb = state.combat.orb;
   const teamCall = state.combat.coachCalls[fighter.team].activeCall;
   const mods = getTeamRiteModifiers(state, fighter.team);
+  const hpRatio = fighter.hp / Math.max(1, fighter.maxHp);
 
   // 1. Incoming Projectile Threat Detection -> Counter (Q) or Space Dodge
   let incomingProj = null;
-  let minProjDist = 78;
-  for (const proj of state.combat.projectiles) {
+  let minProjDist = 86;
+  const projs = state.combat.projectiles;
+  for (let i = 0; i < projs.length; i++) {
+    const proj = projs[i];
     if (proj.team === fighter.team) continue;
     const d = dist(fighter.x, fighter.y, proj.x, proj.y);
     if (d < minProjDist) {
       const toFighterX = fighter.x - proj.x;
       const toFighterY = fighter.y - proj.y;
-      const dot = toFighterX * proj.vx + toFighterY * proj.vy;
-      if (dot > 0) {
+      if (toFighterX * proj.vx + toFighterY * proj.vy > 0) {
         minProjDist = d;
         incomingProj = proj;
       }
@@ -1021,57 +1077,138 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
 
   if (incomingProj) {
     if (fighter.cds.counter <= 0) {
-      let triggerChance = 0.04 + fighter.stats.reflex * 0.004;
+      let triggerChance = 0.05 + fighter.stats.reflex * 0.0045;
       if (teamCall === "COUNTER_STANCE") triggerChance *= 1.45;
-      if (nextRandom(state) < triggerChance || fighter.hp / fighter.maxHp < 0.45) {
+      if (nextRandom(state) < triggerChance || hpRatio < 0.44) {
         executeCounterStance(state, fighter);
         return;
       }
     }
-    if (fighter.cds.space <= 0 && (fighter.hp / fighter.maxHp < 0.5 || champ.role === "RANGED" || champ.role === "MAGE")) {
+    if (fighter.cds.space <= 0 && (hpRatio < 0.56 || champ.role === "RANGED" || champ.role === "MAGE" || champ.role === "SUPPORT")) {
       const perpAngle = Math.atan2(incomingProj.vy, incomingProj.vx) + (nextRandom(state) < 0.5 ? Math.PI / 2 : -Math.PI / 2);
       executeSpaceMobility(state, fighter, perpAngle);
       return;
     }
   }
 
-  // 2. Target Selection (Enemies, Decoys, or Center Energy Orb)
-  const enemies = state.combat.fighters.filter((f) => f.alive && f.team !== fighter.team && f.stealthTimer <= 0);
-  const allies = state.combat.fighters.filter((f) => f.alive && f.team === fighter.team && f.unitId !== fighter.unitId);
-  const enemyDecoys = state.combat.decoys.filter((d) => d.team !== fighter.team);
+  // 2. Single-pass Gather Enemies, Allies, Nearest Support & Decoys (Zero GC)
+  const enemies = [];
+  const allies = [];
+  let allySupport = null;
+  let nearestEnemyDist = Infinity;
+  let nearestEnemy = null;
+  const allFighters = state.combat.fighters;
+  for (let i = 0; i < allFighters.length; i++) {
+    const f = allFighters[i];
+    if (!f.alive) continue;
+    if (f.team !== fighter.team) {
+      if (f.stealthTimer <= 0) {
+        enemies.push(f);
+        const de = dist(fighter.x, fighter.y, f.x, f.y);
+        if (de < nearestEnemyDist) {
+          nearestEnemyDist = de;
+          nearestEnemy = f;
+        }
+      }
+    } else if (f.unitId !== fighter.unitId) {
+      allies.push(f);
+      if (getChampionById(f.champId).role === "SUPPORT") allySupport = f;
+    }
+  }
+  const decoys = state.combat.decoys;
+  let enemyDecoy = null;
+  for (let i = 0; i < decoys.length; i++) {
+    if (decoys[i].team !== fighter.team) {
+      enemyDecoy = decoys[i];
+      break;
+    }
+  }
+
+  // 2b. Disengage & Cover-Reset State Machine (전멸 방지: 박고 안 빼는 AI 해결)
+  const isFrontline = champ.role === "MELEE" || champ.role === "TANK" || champ.role === "ASSASSIN";
+  const lowThresh = champ.role === "TANK" ? 0.27 : isFrontline ? 0.35 : 0.38;
+  const recoverThresh = champ.role === "TANK" ? 0.42 : 0.48;
+  const defenseDown = fighter.cds.space > 1.1 && fighter.cds.counter > 1.2;
+
+  if (enemies.length > 0 && hpRatio < lowThresh && (defenseDown || nearestEnemyDist < 120)) {
+    fighter.aiMode = "RETREAT";
+    fighter.retreatTimer = Math.max(fighter.retreatTimer || 0, 1.45);
+  } else if (fighter.aiMode === "RETREAT") {
+    fighter.retreatTimer = Math.max(0, (fighter.retreatTimer || 0) - dt);
+    if ((hpRatio >= recoverThresh && fighter.cds.space <= 0.4) || (fighter.retreatTimer <= 0 && !defenseDown)) {
+      fighter.aiMode = "POKE";
+    }
+  } else {
+    fighter.aiMode = (isFrontline && hpRatio > 0.55 && fighter.cds.space <= 0.3) ? "ENGAGE" : "POKE";
+  }
+
+  // Support Heal Priority (아군 위기 시 M2 치유 우선 판단)
+  if (champ.role === "SUPPORT" && fighter.cds.m2 <= 0 && champ.m2.healAlly) {
+    let mostInjured = fighter;
+    let lowestR = hpRatio;
+    for (let i = 0; i < allies.length; i++) {
+      const ar = allies[i].hp / Math.max(1, allies[i].maxHp);
+      if (ar < lowestR) {
+        lowestR = ar;
+        mostInjured = allies[i];
+      }
+    }
+    if (lowestR < 0.72 && dist(fighter.x, fighter.y, mostInjured.x, mostInjured.y) <= champ.m2.range + 20) {
+      fighter.facing = Math.atan2(mostInjured.y - fighter.y, mostInjured.x - fighter.x);
+      pushCombatSfx(state, "M2_SKILLSHOT");
+      executeM2(state, fighter, mostInjured, false);
+      return;
+    }
+  }
+
+  // 3. Smart Target Selection (with LOS, Counter Discipline & Orb Burst-Secure)
   let target = null;
   let targetIsOrb = false;
-
-  const isOrbContest = orb.active && (
-    (teamCall === "ORB_FOCUS") ||
+  const dOrb = dist(fighter.x, fighter.y, orb.x, orb.y);
+  const orbSecureReady = orb.active && (
+    (orb.hp <= 42 && dOrb <= Math.max(145, champ.m2.range)) ||
+    (teamCall === "ORB_FOCUS" && hasLineOfSight(arena, fighter.x, fighter.y, orb.x, orb.y)) ||
     (fighter.trait === "orb_hunter" && orb.hp <= 55) ||
-    enemies.length === 0 ||
-    (dist(fighter.x, fighter.y, orb.x, orb.y) < 110 && orb.hp <= 35)
+    enemies.length === 0
   );
 
-  if (isOrbContest) {
+  if (orbSecureReady && orb.active) {
     target = orb;
     targetIsOrb = true;
-  } else if (enemyDecoys.length > 0 && nextRandom(state) < 0.35) {
-    target = enemyDecoys[0];
+  } else if (enemyDecoy && nextRandom(state) < 0.25) {
+    target = enemyDecoy;
   } else if (enemies.length > 0) {
     const focusId = state.combat.focusTargets?.[fighter.team];
-    const carryAlly = allies.find((a) => a.role === "RANGED" || a.role === "MAGE" || a.role === "SUPPORT");
+    let carryAlly = null;
+    for (let i = 0; i < allies.length; i++) {
+      const r = allies[i].role;
+      if (r === "RANGED" || r === "MAGE" || r === "SUPPORT") {
+        carryAlly = allies[i];
+        break;
+      }
+    }
     let bestScore = -Infinity;
-    for (const en of enemies) {
+    for (let i = 0; i < enemies.length; i++) {
+      const en = enemies[i];
       const d = dist(fighter.x, fighter.y, en.x, en.y);
       const hpMissingRatio = 1 - en.hp / en.maxHp;
-      let score = 300 - d + hpMissingRatio * 140;
+      const clearLOS = hasLineOfSight(arena, fighter.x, fighter.y, en.x, en.y);
+      let score = 310 - d + hpMissingRatio * 145;
+
+      if (!champ.m1.isMelee) {
+        score += clearLOS ? 65 : -90;
+      }
+      if (en.counterTimer > 0) {
+        score -= 220; // 프로게이머 AI: 반격 자세 켠 적은 우선순위 대폭 하락
+      }
 
       if (teamCall === "EX_RUSH") {
-        // 🎯 딜러 점사: 적 후열·저체력 집중 + 팀 일제 포커싱
         if (en.role === "RANGED" || en.role === "MAGE" || en.role === "SUPPORT") score += 120;
         score += hpMissingRatio * 90;
         if (focusId && en.unitId === focusId) score += 95;
       } else if (teamCall === "COUNTER_STANCE" && carryAlly) {
-        // 🛡️ 호위·카이팅: 아군 딜러에게 달라붙는 위협적 우선 견제
         const dCarry = dist(en.x, en.y, carryAlly.x, carryAlly.y);
-        score += Math.max(0, 180 - dCarry) * 0.9;
+        score += Math.max(0, 180 - dCarry) * 0.95;
       }
 
       if (score > bestScore) {
@@ -1094,75 +1231,108 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   }
 
   const dTarget = dist(fighter.x, fighter.y, target.x, target.y);
-  fighter.facing = Math.atan2(target.y - fighter.y, target.x - fighter.x);
+  const directAngle = Math.atan2(target.y - fighter.y, target.x - fighter.x);
+  fighter.facing = directAngle;
 
-  // 3. Steering Vector Movement (Chasing / Kiting / Vortex Avoidance / Ally Separation)
+  // 4. Pro Steering Movement (Retreat/Cover Reset, Pillar Peeking, Footsies, Separation)
   let moveX = 0;
   let moveY = 0;
-  let desiredRange = targetIsOrb ? Math.min(champ.preferredRange, 95) : champ.preferredRange;
-  if (teamCall === "COUNTER_STANCE" && !targetIsOrb) {
-    desiredRange += 22;
-  }
-
-  if (dTarget > desiredRange + 14) {
-    moveX += Math.cos(fighter.facing) * 1.0;
-    moveY += Math.sin(fighter.facing) * 1.0;
-  } else if (dTarget < desiredRange - 20 && !targetIsOrb) {
-    // Kite away
-    moveX -= Math.cos(fighter.facing) * 0.9;
-    moveY -= Math.sin(fighter.facing) * 0.9;
-  }
-
-  // Gentle strafing without jittery wobbling
   const strafeDir = fighter.unitId.endsWith("1") ? -1 : 1;
-  moveX += Math.cos(fighter.facing + (Math.PI / 2) * strafeDir) * 0.14;
-  moveY += Math.sin(fighter.facing + (Math.PI / 2) * strafeDir) * 0.14;
 
-  // 🛡️ 호위·카이팅: 후열 아군 딜러 주변 밀착 호위
-  if (teamCall === "COUNTER_STANCE") {
-    const carryAlly = allies.find((a) => a.role === "RANGED" || a.role === "MAGE" || a.role === "SUPPORT");
+  if (fighter.aiMode === "RETREAT" && nearestEnemy) {
+    // 이탈·재정비 모드: 가장 가까운 적에게서 멀어지고 아군 서포터/기둥 엄폐 뒤로 이동
+    const awayAng = Math.atan2(fighter.y - nearestEnemy.y, fighter.x - nearestEnemy.x);
+    moveX += Math.cos(awayAng) * 1.45;
+    moveY += Math.sin(awayAng) * 1.45;
+
+    if (allySupport && dist(fighter.x, fighter.y, allySupport.x, allySupport.y) > 55) {
+      const supAng = Math.atan2(allySupport.y - fighter.y, allySupport.x - fighter.x);
+      moveX += Math.cos(supAng) * 0.95;
+      moveY += Math.sin(supAng) * 0.95;
+    }
+    if (fighter.cds.space <= 0 && nearestEnemyDist < 105) {
+      executeSpaceMobility(state, fighter, Math.atan2(moveY || Math.sin(awayAng), moveX || Math.cos(awayAng)));
+      return;
+    }
+  } else {
+    let desiredRange = targetIsOrb ? Math.min(champ.preferredRange, 95) : champ.preferredRange;
+    if (teamCall === "COUNTER_STANCE" && !targetIsOrb) {
+      desiredRange += 24;
+    } else if (fighter.aiMode === "POKE" && isFrontline && hpRatio < 0.52) {
+      desiredRange += 32; // 전열도 체력 낮으면 간 보기(Footsies) 거리 유지
+    }
+
+    if (dTarget > desiredRange + 14) {
+      moveX += Math.cos(directAngle) * 1.0;
+      moveY += Math.sin(directAngle) * 1.0;
+    } else if (dTarget < desiredRange - 18 && !targetIsOrb) {
+      moveX -= Math.cos(directAngle) * 0.95;
+      moveY -= Math.sin(directAngle) * 0.95;
+    }
+
+    // 원거리·마법사가 석주에 시야가 막혔을 때 측면 피킹(Pillar Peek)
+    if (!targetIsOrb && !champ.m1.isMelee && !hasLineOfSight(arena, fighter.x, fighter.y, target.x, target.y)) {
+      moveX += Math.cos(directAngle + (Math.PI / 2) * strafeDir) * 1.15;
+      moveY += Math.sin(directAngle + (Math.PI / 2) * strafeDir) * 1.15;
+    } else {
+      moveX += Math.cos(directAngle + (Math.PI / 2) * strafeDir) * 0.22;
+      moveY += Math.sin(directAngle + (Math.PI / 2) * strafeDir) * 0.22;
+    }
+  }
+
+  // 호위·카이팅 및 오브 선점 기동
+  if (teamCall === "COUNTER_STANCE" && fighter.aiMode !== "RETREAT") {
+    let carryAlly = null;
+    for (let i = 0; i < allies.length; i++) {
+      const r = allies[i].role;
+      if (r === "RANGED" || r === "MAGE" || r === "SUPPORT") {
+        carryAlly = allies[i];
+        break;
+      }
+    }
     if (carryAlly) {
       const dc = dist(fighter.x, fighter.y, carryAlly.x, carryAlly.y);
       if (dc > 95) {
         const angC = Math.atan2(carryAlly.y - fighter.y, carryAlly.x - fighter.x);
-        moveX += Math.cos(angC) * 0.75;
-        moveY += Math.sin(angC) * 0.75;
+        moveX += Math.cos(angC) * 0.72;
+        moveY += Math.sin(angC) * 0.72;
       }
     }
-  } else if (teamCall === "ORB_FOCUS" && !orb.active && orb.respawnTimer <= 3.5) {
-    // 💠 거점·오브 장악: 오브 생성 임박 시 중앙 거점 선점
+  } else if (teamCall === "ORB_FOCUS" && !orb.active && orb.respawnTimer <= 3.5 && fighter.aiMode !== "RETREAT") {
     const dCenter = dist(fighter.x, fighter.y, arena.centerX, arena.centerY);
-    if (dCenter > 65) {
+    if (dCenter > 68) {
       const angOrb = Math.atan2(arena.centerY - fighter.y, arena.centerX - fighter.x);
-      moveX += Math.cos(angOrb) * 0.7;
-      moveY += Math.sin(angOrb) * 0.7;
+      moveX += Math.cos(angOrb) * 0.72;
+      moveY += Math.sin(angOrb) * 0.72;
     }
   }
 
   // Dodge incoming projectile laterally
   if (incomingProj) {
     const dodgeAngle = Math.atan2(incomingProj.vy, incomingProj.vx) + Math.PI / 2;
-    moveX += Math.cos(dodgeAngle) * 1.1;
-    moveY += Math.sin(dodgeAngle) * 1.1;
+    moveX += Math.cos(dodgeAngle) * 1.15;
+    moveY += Math.sin(dodgeAngle) * 1.15;
   }
 
-  // Separation from allies
-  for (const ally of state.combat.fighters) {
+  // Separation from allies & fighters
+  for (let i = 0; i < allFighters.length; i++) {
+    const ally = allFighters[i];
     if (!ally.alive || ally.unitId === fighter.unitId) continue;
     const da = dist(fighter.x, fighter.y, ally.x, ally.y);
     if (da > 0 && da < 36) {
-      moveX += ((fighter.x - ally.x) / da) * 0.8;
-      moveY += ((fighter.y - ally.y) / da) * 0.8;
+      moveX += ((fighter.x - ally.x) / da) * 0.85;
+      moveY += ((fighter.y - ally.y) / da) * 0.85;
     }
   }
 
   // Avoid Arena Pillars smoothly with tangential slide
   if (arena.pillars) {
-    for (const p of arena.pillars) {
+    for (let i = 0; i < arena.pillars.length; i++) {
+      const p = arena.pillars[i];
       const dp = dist(fighter.x, fighter.y, p.x, p.y);
-      const avoidDist = p.radius + fighter.radius + 22;
+      const avoidDist = p.radius + fighter.radius + 20;
       if (dp > 0 && dp < avoidDist) {
-        const pushStrength = ((avoidDist - dp) / avoidDist) * 1.9;
+        const pushStrength = ((avoidDist - dp) / avoidDist) * 1.95;
         const nx = (fighter.x - p.x) / dp;
         const ny = (fighter.y - p.y) / dp;
         moveX += (nx - ny * 0.65 * strafeDir) * pushStrength;
@@ -1171,13 +1341,14 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
     }
   }
 
-  // Avoid Warning/Active Harmful Hazards, Seek Ready Shrines
+  // Avoid Warning/Active Harmful Hazards, Seek Ready Shrines (extra heal priority in RETREAT)
   if (arena.hazards) {
-    for (const h of arena.hazards) {
+    for (let i = 0; i < arena.hazards.length; i++) {
+      const h = arena.hazards[i];
       if (h.type === "LEYLINE_HASTE") continue;
       if (h.phase === "WARNING" || h.phase === "ACTIVE") {
         const dh = dist(fighter.x, fighter.y, h.x, h.y);
-        if (dh < h.radius + 16) {
+        if (dh < h.radius + 18) {
           const awayAng = Math.atan2(fighter.y - h.y, fighter.x - h.x);
           const urgency = h.phase === "ACTIVE" ? 2.4 : 1.5;
           moveX += Math.cos(awayAng) * urgency;
@@ -1190,22 +1361,22 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   if (arena.shrines) {
     let bestShrine = null;
     let bestShrineWeight = 0;
-    const hpRatio = fighter.hp / fighter.maxHp;
-    for (const s of arena.shrines) {
+    for (let i = 0; i < arena.shrines.length; i++) {
+      const s = arena.shrines[i];
       if (!s.ready) continue;
       if (s.type === "WARP_GATE" && fighter.warpCooldown > 0) continue;
       const ds = dist(fighter.x, fighter.y, s.x, s.y);
       let desire = 0;
-      if ((s.type === "HEAL_SHRINE" || s.type === "SHIELD_SHRINE") && hpRatio < 0.72 && ds < 195) {
-        desire = (1 - hpRatio) * 1.6;
+      if ((s.type === "HEAL_SHRINE" || s.type === "SHIELD_SHRINE") && hpRatio < 0.78 && ds < 225) {
+        desire = (1 - hpRatio) * (fighter.aiMode === "RETREAT" ? 2.4 : 1.65);
       } else if (s.type === "ATK_SHRINE" && fighter.atkBuffTimer <= 0 && ds < 135) {
         desire = 0.85;
       } else if (s.type === "ENERGY_SHRINE" && fighter.energy < 85 && ds < 140) {
         desire = 0.9;
-      } else if (s.type === "WARP_GATE" && hpRatio < 0.45 && ds < 105) {
-        desire = 0.8;
+      } else if (s.type === "WARP_GATE" && hpRatio < 0.45 && ds < 115) {
+        desire = 1.05;
       }
-      if (teamCall === "ORB_FOCUS") desire *= 1.45;
+      if (teamCall === "ORB_FOCUS") desire *= 1.35;
       if (desire > bestShrineWeight) {
         bestShrineWeight = desire;
         bestShrine = s;
@@ -1222,23 +1393,24 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   const distFromCenter = dist(fighter.x, fighter.y, arena.centerX, arena.centerY);
   if (distFromCenter > arena.safeRadius - 22) {
     const inwardAngle = Math.atan2(arena.centerY - fighter.y, arena.centerX - fighter.x);
-    moveX += Math.cos(inwardAngle) * 2.2;
-    moveY += Math.sin(inwardAngle) * 2.2;
+    moveX += Math.cos(inwardAngle) * 2.25;
+    moveY += Math.sin(inwardAngle) * 2.25;
   }
 
   const mag = Math.hypot(moveX, moveY);
   if (mag > 0.01) {
     let speed = champ.moveSpeed * mods.moveSpeedMult * TEMPO_CONFIG.moveSpeedMult;
     if (fighter.hasteTimer > 0 || fighter.leylineBuff) speed *= 1.20;
-    if (teamCall === "EX_RUSH") speed *= 1.10;
+    if (teamCall === "EX_RUSH") speed *= 1.08;
     else if (teamCall === "ORB_FOCUS" && (orb.active || distFromCenter > 90)) speed *= 1.12;
+    if (fighter.aiMode === "RETREAT") speed *= 1.08;
     if (fighter.slowTimer > 0) speed *= 0.65;
     if (fighter.castSlowTimer > 0) speed *= 0.45;
 
     const targetVx = (moveX / mag) * speed;
     const targetVy = (moveY / mag) * speed;
-    fighter.vx = (fighter.vx || 0) * 0.80 + targetVx * 0.20;
-    fighter.vy = (fighter.vy || 0) * 0.80 + targetVy * 0.20;
+    fighter.vx = (fighter.vx || 0) * 0.78 + targetVx * 0.22;
+    fighter.vy = (fighter.vy || 0) * 0.78 + targetVy * 0.22;
     fighter.x = clamp(fighter.x + fighter.vx * dt, fighter.radius + 6, arena.width - fighter.radius - 6);
     fighter.y = clamp(fighter.y + fighter.vy * dt, fighter.radius + 6, arena.height - fighter.radius - 6);
     resolvePillarCollision(fighter, arena);
@@ -1248,31 +1420,47 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
     fighter.vy = (fighter.vy || 0) * 0.72;
   }
 
-  // 4. Ability Execution Priority
-  if (fighter.energy >= 100 && dTarget <= champ.ultSkill.range) {
+  // 5. Ability Execution Priority (with Counter Hold & Predictive Leading!)
+  const enemyCountering = !targetIsOrb && (target.counterTimer || 0) > 0;
+  const triggerHoldProb = enemyCountering ? clamp(0.45 + (fighter.stats?.reflex || 75) * 0.0055, 0.55, 0.94) : 0;
+  if (enemyCountering && nextRandom(state) < triggerHoldProb) {
+    // 반격 자세가 켜진 적을 때리지 않고 홀드 (배틀라이트 핵심 심리전!)
+    return;
+  }
+
+  const targetInLOS = targetIsOrb || champ.m1.isMelee || hasLineOfSight(arena, fighter.x, fighter.y, target.x, target.y);
+
+  if (fighter.energy >= 100 && dTarget <= champ.ultSkill.range && !enemyCountering) {
     if (executeUltimate(state, fighter)) return;
   }
 
   const exCost = Math.max(15, (champ.exSkill.cost || 25) - mods.exCostReduction);
-  if (fighter.energy >= exCost && fighter.cds.ex <= 0 && dTarget <= champ.exSkill.range) {
-    const shouldCastEx = teamCall === "EX_RUSH" || fighter.energy >= 50 || (champ.role === "SUPPORT" && fighter.hp / fighter.maxHp < 0.7) || nextRandom(state) < 0.35;
-    if (shouldCastEx && executeEXSkill(state, fighter, target, targetIsOrb)) {
-      return;
+  if (fighter.energy >= exCost && fighter.cds.ex <= 0 && dTarget <= champ.exSkill.range && targetInLOS) {
+    const shouldCastEx = teamCall === "EX_RUSH" || fighter.energy >= 50 || (champ.role === "SUPPORT" && hpRatio < 0.7) || (targetIsOrb && orb.hp <= 48) || nextRandom(state) < 0.35;
+    if (shouldCastEx) {
+      fighter.facing = targetIsOrb ? directAngle : computeLeadAimAngle(fighter, target, champ.exSkill.projSpeed || 420);
+      if (executeEXSkill(state, fighter, target, targetIsOrb)) {
+        return;
+      }
     }
   }
 
-  if (fighter.cds.space <= 0 && (champ.role === "MELEE" || champ.role === "TANK" || champ.role === "ASSASSIN") && dTarget > 115 && dTarget < 190) {
-    executeSpaceMobility(state, fighter, fighter.facing);
+  if (fighter.aiMode !== "RETREAT" && fighter.cds.space <= 0 && isFrontline && dTarget > 118 && dTarget < 192 && !enemyCountering) {
+    executeSpaceMobility(state, fighter, directAngle);
     return;
   }
 
-  if (fighter.cds.m2 <= 0 && dTarget <= champ.m2.range) {
+  if (fighter.cds.m2 <= 0 && dTarget <= champ.m2.range && targetInLOS) {
+    // 중앙 오브 체력이 적당히 남았거나, 적에게 확실히 맞출 각일 때 M2 예측 발사
+    fighter.facing = targetIsOrb ? directAngle : computeLeadAimAngle(fighter, target, champ.m2.projSpeed || 380);
     pushCombatSfx(state, "M2_SKILLSHOT");
     executeM2(state, fighter, target, targetIsOrb);
     return;
   }
 
   if (fighter.cds.m1 <= 0 && dTarget <= champ.m1.range + (targetIsOrb ? state.combat.orb.radius : target.radius || 15)) {
+    if (!champ.m1.isMelee && !targetInLOS) return;
+    fighter.facing = (targetIsOrb || champ.m1.isMelee) ? directAngle : computeLeadAimAngle(fighter, target, champ.m1.projSpeed || 380, 0.36);
     pushCombatSfx(state, "M1_FIRE");
     executeM1(state, fighter, target, targetIsOrb);
   }
@@ -1536,7 +1724,9 @@ export function evaluateHeadCoachAutoCalls(state) {
       }
       const coachLabel = coach?.name ? coach.name.split(" (")[0] : `${teamKey.toUpperCase()} 감독`;
       const callDef = COACH_CALLS[chosenCall];
-      addTicker(state, `🎙️ [${coachLabel} 감독 · ${reasonLabel}] ${callDef?.name || chosenCall} 전술 전환!`, "CALL");
+      const barks = coach?.matchBarks || [];
+      const barkLine = barks.length > 0 ? ` — "${barks[Math.floor((combat.elapsed || 0) + seatIdx) % barks.length]}"` : "";
+      addTicker(state, `🎙️ [${coachLabel} · ${reasonLabel}] ${callDef?.name || chosenCall}${barkLine}`, "CALL");
     }
   }
 }
@@ -1625,20 +1815,17 @@ export function stepCombat(state, dt) {
             f.atkBuffTimer = 8.0;
             f.shield += 45;
             spawnEffect(state, "NOVA", s.x, s.y, "#f97316", 44, 0.45);
-            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#fb923c", 12, 0.75, "화염 증폭 +25%!");
             addTicker(state, `🔥 ${f.name} [${s.label}] 점령! (공격력 +25%)`, "INFO");
           } else if (s.type === "SHIELD_SHRINE") {
             f.shield += 120;
             f.slowTimer = 0;
             f.hasteTimer = Math.max(f.hasteTimer, 4.0);
             spawnEffect(state, "NOVA", s.x, s.y, "#67e8f9", 44, 0.45);
-            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#67e8f9", 12, 0.75, "수호 성물 +120!");
             addTicker(state, `❄️ ${f.name} [${s.label}] 점령! (+120 보호막)`, "INFO");
           } else if (s.type === "ENERGY_SHRINE") {
             grantEnergy(state, f, 28);
             healFighter(f, 45, state);
             spawnEffect(state, "NOVA", s.x, s.y, "#a855f7", 42, 0.45);
-            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#c084fc", 12, 0.75, "+28 EN!");
             addTicker(state, `🔮 ${f.name} [${s.label}] 흡수! (+28 에너지)`, "INFO");
           } else if (s.type === "WARP_GATE") {
             const pair = combat.arena.shrines.find((o) => o.id === s.pairId);
@@ -1654,7 +1841,6 @@ export function stepCombat(state, dt) {
             f.hasteTimer = Math.max(f.hasteTimer, 3.0);
             f.shield += 40;
             f.warpCooldown = 3.0;
-            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#c084fc", 12, 0.75, "차원 도약!");
             addTicker(state, `🌀 ${f.name} 차원 도약문으로 순간 이동!`, "INFO");
           }
           s.timer = s.cooldown;

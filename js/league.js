@@ -1,6 +1,6 @@
 /**
  * js/league.js
- * 6팀 LCK 스타일 리그 일정(5라운드 15경기), 헤드리스 고속 시뮬레이션,
+ * 10팀 LCK 스타일 리그 일정(9라운드 45경기), 헤드리스 고속 시뮬레이션,
  * LCK 순위 산정(승수 -> 세트득실 -> 상대전적), Top-4 Bo5 플레이오프,
  * 스네이크 밴픽 드래프트, 세트 간 Rite 카드, 구단 운영 AP(2 AP/라운드), 자동 밸런스 패치.
  */
@@ -9,6 +9,7 @@ import {
   CHAMPIONS,
   FACILITY_DEFS,
   HEAD_COACHES,
+  LEAGUE_TEAM_COUNT,
   MAP_ORDER,
   RITE_CARDS,
   ROOM_MODES,
@@ -40,7 +41,7 @@ export const DRAFT_SEQUENCE = [
   { phase: "PICK_RED_3", team: "red", type: "pick", label: "RED 3픽" }
 ];
 
-export function generateSchedule(seatCount = 6, baseTimeMs = Date.now(), scheduleMode = SCHEDULE_MODES.REALTIME_DAILY, roomSeed = "4821") {
+export function generateSchedule(seatCount = LEAGUE_TEAM_COUNT, baseTimeMs = Date.now(), scheduleMode = SCHEDULE_MODES.REALTIME_DAILY, roomSeed = "4821") {
   const ids = Array.from({ length: seatCount }, (_, i) => i);
   const fixed = ids[0];
   const rotating = ids.slice(1);
@@ -101,12 +102,23 @@ export function getStandings(state) {
   });
 }
 
+const FA_CANDIDATE_NAMES = [
+  "주민규 (Duro)",
+  "오형석 (Career)",
+  "오동규 (Pollu)",
+  "이정태 (Fisher)",
+  "선현빈 (Calix)",
+  "남대근 (Diable)",
+  "유지명 (Daystar)",
+  "이상호 (Effort)",
+  "김정민 (Life)",
+  "정윤수 (Peter)"
+];
+
 function generateReplacementFA(state) {
   const champKeys = Object.keys(CHAMPIONS);
   const traitKeys = Object.keys(TRAITS);
-  const suffixes = ["Nova", "Pulse", "Blade", "Vortex", "Ace", "Zenith", "Flash", "Prime"];
-  const prefix = ["K", "L", "S", "J", "H", "M", "R", "T"][Math.floor(Math.random() * 8)];
-  const name = `${prefix}${suffixes[Math.floor(Math.random() * suffixes.length)]}${Math.floor(10 + Math.random() * 89)}`;
+  const name = FA_CANDIDATE_NAMES[Math.floor(Math.random() * FA_CANDIDATE_NAMES.length)];
   const c1 = champKeys[Math.floor(Math.random() * champKeys.length)];
   const c2 = champKeys[Math.floor(Math.random() * champKeys.length)];
 
@@ -258,7 +270,18 @@ export function selectSponsorContract(state, seatIndex, sponsorId) {
 }
 
 const ARCADE_ROSTER_NAMES = [
-  "Kaelen", "Sora", "Zedric", "Nova", "Valkyr", "Jin", "Lumen", "Kira", "Aria", "RivenX", "Viper", "Chrono"
+  "이상혁 (Faker)",
+  "정지훈 (Chovy)",
+  "박도현 (Viper)",
+  "최우제 (Zeus)",
+  "류민석 (Keria)",
+  "허수 (ShowMaker)",
+  "김건부 (Canyon)",
+  "박재혁 (Ruler)",
+  "곽보성 (Bdd)",
+  "이민형 (Gumayusi)",
+  "김기인 (Kiin)",
+  "문현준 (Oner)"
 ];
 
 /**
@@ -1071,6 +1094,17 @@ export function runCoachDraftStep(state) {
   return applyDraftPick(state, res.champId, res.log);
 }
 
+/**
+ * 구단주 관전 모드에서 남은 모든 밴픽 단계를 양 팀 감독이 한 번에 완성한다.
+ */
+export function autoCompleteCoachDraft(state) {
+  let guard = 0;
+  while (state?.activeSeries?.draft?.stepIndex < DRAFT_SEQUENCE.length && guard < 12) {
+    if (!runCoachDraftStep(state)) break;
+    guard++;
+  }
+}
+
 function runAutoAIDraftSteps(state) {
   const series = state.activeSeries;
   const draft = series.draft;
@@ -1327,15 +1361,16 @@ export function setScheduleMode(state, mode, baseTimeMs = Date.now()) {
       if (!m.completed) m.scheduledAt = t;
     }
   }
+  const totalWeeks = Math.max(1, (state.schedule || []).length || state.maxWeeks || LEAGUE_TEAM_COUNT - 1);
   if (state.playoffs) {
     if (state.playoffs.semi1 && state.playoffs.semi1.winnerSeat === null) {
-      state.playoffs.semi1.scheduledAt = computeRoundScheduledAt(baseTimeMs, 5, valid);
+      state.playoffs.semi1.scheduledAt = computeRoundScheduledAt(baseTimeMs, totalWeeks, valid);
     }
     if (state.playoffs.semi2 && state.playoffs.semi2.winnerSeat === null) {
-      state.playoffs.semi2.scheduledAt = computeRoundScheduledAt(baseTimeMs, 5, valid);
+      state.playoffs.semi2.scheduledAt = computeRoundScheduledAt(baseTimeMs, totalWeeks, valid);
     }
     if (state.playoffs.final && state.playoffs.final.winnerSeat === null) {
-      state.playoffs.final.scheduledAt = computeRoundScheduledAt(baseTimeMs, 6, valid);
+      state.playoffs.final.scheduledAt = computeRoundScheduledAt(baseTimeMs, totalWeeks + 1, valid);
     }
   }
 }
@@ -1644,8 +1679,12 @@ export function generateDailyNews(state, matchResults = [], roundLabel = "", rou
 
     const logs = featured.coachLogs || [];
     const egoLog = logs.find((l) => l.includes("독단 픽") || l.includes("긴급 개입"));
+    const winnerBarks = winner.headCoach?.matchBarks || [];
+    const sampleBark = winnerBarks.length > 0 ? winnerBarks[Math.floor((featured.homeSets + featured.awaySets + state.week) % winnerBarks.length)] : null;
     if (egoLog) {
       coachDrama = `🎙️ 밴픽 화제: ${egoLog}`;
+    } else if (sampleBark) {
+      coachDrama = `🎙️ ${winner.headCoach?.name || winner.coachName} 감독 "${sampleBark}"`;
     } else if (logs[0]) {
       coachDrama = `🎙️ 코치 코멘트: ${logs[0]}`;
     } else {
@@ -1689,13 +1728,20 @@ export function generateDailyNews(state, matchResults = [], roundLabel = "", rou
 
 function generateSuperRookies(state) {
   const rng = createSeededRng(hashSeed(`${state.roomCode || "0000"}_stove_s${state.seasonNumber || 1}`));
-  const names = ["KeriaZero", "ChovyNext", "ZeusPrime", "ShowMakerX", "OnerBlade", "GumayusiV"];
+  const names = [
+    "김신우 (Apex)",
+    "박준혁 (Zenith)",
+    "이하늘 (Skyline)",
+    "최도윤 (Vortex)",
+    "강민재 (Nova)",
+    "한서준 (Blaze)"
+  ];
   const traitKeys = Object.keys(TRAITS);
   const champKeys = Object.keys(CHAMPIONS);
   const rookies = [];
 
   for (let i = 0; i < 3; i++) {
-    const pickName = names[(Math.floor(rng() * names.length) + i) % names.length] + `_${(state.seasonNumber || 1) + 1}`;
+    const pickName = names[(Math.floor(rng() * names.length) + i) % names.length];
     const m = 78 + Math.floor(rng() * 13);
     const r = 78 + Math.floor(rng() * 13);
     const t = 75 + Math.floor(rng() * 14);
@@ -1845,8 +1891,10 @@ export function startNextSeason(state) {
     seat.roundPayroll = computeRoundPayroll(seat);
   }
 
-  state.schedule = generateSchedule(6);
-  setScheduleMode(state, state.scheduleMode || SCHEDULE_MODES.REALTIME_DAILY, Date.now());
+    const teamCount = Math.max(2, state.seats?.length || LEAGUE_TEAM_COUNT);
+    state.maxWeeks = teamCount - 1;
+    state.schedule = generateSchedule(teamCount, Date.now(), state.scheduleMode || SCHEDULE_MODES.REALTIME_DAILY, state.roomCode || "4821");
+    setScheduleMode(state, state.scheduleMode || SCHEDULE_MODES.REALTIME_DAILY, Date.now());
   state.playoffs = {
     active: false,
     round: "SEMI_1",
@@ -1895,8 +1943,9 @@ function finalizeRegularWeek(state) {
     const seeds = ranked.slice(0, 4).map((s) => s.seatIndex);
     const mode = state.scheduleMode || SCHEDULE_MODES.REALTIME_DAILY;
     const baseMs = state.seasonBaseTimeMs || Date.now();
-    const semiTime = computeRoundScheduledAt(baseMs, 5, mode);
-    const finalTime = computeRoundScheduledAt(baseMs, 6, mode);
+    const semiOffset = state.maxWeeks || (state.seats?.length || LEAGUE_TEAM_COUNT) - 1;
+    const semiTime = computeRoundScheduledAt(baseMs, semiOffset, mode);
+    const finalTime = computeRoundScheduledAt(baseMs, semiOffset + 1, mode);
     state.playoffs = {
       active: true,
       round: "SEMI_1",

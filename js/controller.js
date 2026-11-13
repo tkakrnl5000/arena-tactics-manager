@@ -23,6 +23,7 @@ import {
   quickSimulateFullRound,
   advanceDraftStep,
   runCoachDraftStep,
+  autoCompleteCoachDraft,
   selectRiteCard,
   autoSelectCoachRiteCard,
   recordSetWinAndProceed,
@@ -52,7 +53,7 @@ import { initAudio, playSfx, isAudioMuted, toggleAudioMute } from "./audio.js";
 import { initRenderer, renderArena } from "./renderer.js";
 import { initHUD, renderHUD, showModal, updateScheduleCountdownHUD } from "./hud.js";
 
-const LOCAL_SAVE_KEY = "atm_saved_league_v2";
+const LOCAL_SAVE_KEY = "atm_saved_league_v3";
 
 function saveLocalLeagueState(state) {
   try {
@@ -89,6 +90,7 @@ let rafId = null;
 let lastTimestamp = 0;
 let accumulator = 0;
 let draftAutoAccum = 0;
+let riteAutoAccum = 0;
 let scheduleTickAccum = 0;
 const handledRemoteCallIds = new Set();
 const FIXED_DT = 1 / 60;
@@ -202,7 +204,7 @@ function mainLoop(timestamp) {
 
   if (appState.screen === SCREEN_STATES.DRAFT && appState.roomMode !== ROOM_MODES.ARCADE_2P && !appState.liveOverride) {
     draftAutoAccum += elapsed;
-    if (draftAutoAccum >= 0.52) {
+    if (draftAutoAccum >= 0.45) {
       draftAutoAccum = 0;
       if (runCoachDraftStep(appState)) {
         playSfx("CLICK");
@@ -212,6 +214,21 @@ function mainLoop(timestamp) {
     }
   } else {
     draftAutoAccum = 0;
+  }
+
+  if (appState.screen === SCREEN_STATES.RITE_DRAFT && appState.roomMode !== ROOM_MODES.ARCADE_2P && !appState.liveOverride) {
+    riteAutoAccum += elapsed;
+    if (riteAutoAccum >= 1.65) {
+      riteAutoAccum = 0;
+      const series = appState.activeSeries;
+      const myTeamSide = series.redSeat === appState.localSeatIndex ? "red" : "blue";
+      autoSelectCoachRiteCard(appState, myTeamSide);
+      playSfx("CALL");
+      saveLocalLeagueState(appState);
+      renderHUD(appState);
+    }
+  } else {
+    riteAutoAccum = 0;
   }
 
   if (appState.screen === SCREEN_STATES.COMBAT && canvasCtx) {
@@ -320,6 +337,22 @@ export function initApp() {
       if (runCoachDraftStep(appState)) {
         await commitAndSync();
       }
+    },
+
+    onAutoCompleteDraft: async () => {
+      playSfx("CALL");
+      autoCompleteCoachDraft(appState);
+      await commitAndSync();
+    },
+
+    onResumeClub: () => {
+      playSfx("CLICK");
+      appState.combat.running = false;
+      appState.screen = appState.roomMode === ROOM_MODES.ARCADE_2P
+        ? SCREEN_STATES.ARCADE_LOBBY
+        : (appState.playoffs?.active ? SCREEN_STATES.PLAYOFF_BRACKET : SCREEN_STATES.WEEKLY_HUB);
+      saveLocalLeagueState(appState);
+      renderHUD(appState);
     },
 
     onCoachSelectRite: async () => {
@@ -502,6 +535,8 @@ export function initApp() {
     onStartQuickExhibition: () => {
       playSfx("CALL");
       appState.activeSeries.seriesMode = "EXHIBITION";
+      appState.activeSeries.blueSeat = 0;
+      appState.activeSeries.redSeat = 1;
       appState.activeSeries.bestOf = 1;
       appState.activeSeries.currentSet = 1;
       appState.activeSeries.blueWins = 0;
@@ -663,6 +698,13 @@ export function initApp() {
       renderHUD(appState);
     },
 
+    onReplaySameExhibition: () => {
+      playSfx("CALL");
+      appState.activeSeries.matchSeed = Math.floor(100000 + Math.random() * 899999);
+      initCombatRound(appState);
+      renderHUD(appState);
+    },
+
     onSelectRiteCard: async (riteId) => {
       const series = appState.activeSeries;
       const myTeamSide = series.redSeat === appState.localSeatIndex ? "red" : "blue";
@@ -683,7 +725,7 @@ export function initApp() {
     onNewSeason: async () => {
       const prevCode = appState.roomCode;
       const prevLocal = appState.localSeatIndex;
-      const prevCoach = appState.seats[prevLocal]?.coachName || "Host Coach";
+      const prevCoach = appState.seats[prevLocal]?.coachName || "김정균 (kkOma)";
       appState = createInitialState(prevCode);
       appState.localSeatIndex = prevLocal;
       if (appState.seats[prevLocal]) {
