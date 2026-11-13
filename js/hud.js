@@ -183,26 +183,77 @@ function getCategorySvg(category) {
 }
 
 /**
- * 아레나 4종 전술 미니맵 인라인 SVG 생성
+ * 배틀라이트풍 챔피언 개별 SVG 초상화 엠블럼
+ */
+function getChampionAvatarSvg(champId, size = 26) {
+  const c = getChampionById(champId);
+  const col = c.color || "#38bdf8";
+  let emblem = "";
+  switch (champId) {
+    case "kylen":
+      emblem = `<path d="M5 19L19 5M14 5h5v5" stroke="#f59e0b" stroke-width="2.3"/><path d="M7 15c2-4 7-7 11-7" stroke="#f8fafc" stroke-width="1.6"/>`;
+      break;
+    case "sylvia":
+      emblem = `<path d="M8 4c5 3 7 13 0 16" stroke="#34d399" stroke-width="2.2"/><line x1="8" y1="4" x2="8" y2="20" stroke="#e2e8f0" stroke-width="1"/><path d="M5 12h14l-3-2.5M19 12l-3 2.5" stroke="#a7f3d0" stroke-width="1.6"/>`;
+      break;
+    case "orion":
+      emblem = `<circle cx="12" cy="12" r="7" stroke="#93c5fd" stroke-width="1.5"/><ellipse cx="12" cy="12" rx="9" ry="3.5" transform="rotate(-25 12 12)" stroke="#f59e0b" stroke-width="1.4"/><circle cx="12" cy="12" r="2.6" fill="#fff"/>`;
+      break;
+    case "balrog":
+      emblem = `<path d="M5 7c0-2 2-3 4-3-1 2 0 4 3 4s4-2 3-4c2 0 4 1 4 3v5c0 4.5-3 7.5-7 9-4-1.5-7-4.5-7-9V7z" fill="#7f1d1d" stroke="#f97316" stroke-width="1.8"/><path d="M9 11h6M12 8v8" stroke="#fdba74" stroke-width="1.6"/>`;
+      break;
+    case "nyx":
+      emblem = `<path d="M5 17L13 9M19 17L11 9" stroke="#c4b5fd" stroke-width="2.1"/><polygon points="12,4 15,8 12,12 9,8" fill="#8b5cf6" stroke="#f8fafc" stroke-width="1"/>`;
+      break;
+    case "ignis":
+      emblem = `<path d="M12 3c2 3 5 5 5 9a5 5 0 1 1-10 0c0-2.5 1.5-4.5 3-6 .3 1.8 1 2.8 2 3z" fill="#f97316" stroke="#fde047" stroke-width="1.5"/>`;
+      break;
+    case "vex":
+      emblem = `<circle cx="12" cy="12" r="6.5" stroke="#22d3ee" stroke-width="1.8"/><path d="M12 3v4M12 17v4M3 12h4M17 12h4" stroke="#67e8f9" stroke-width="1.8"/><circle cx="12" cy="12" r="2" fill="#f43f5e"/>`;
+      break;
+    case "lyra":
+      emblem = `<path d="M8 6c-2 2-2 6 1 8M16 6c2 2 2 6-1 8" stroke="#fda4af" stroke-width="1.8"/><polygon points="12,5 15,12 12,19 9,12" fill="#f472b6" fill-opacity="0.45" stroke="#ffe4e6" stroke-width="1.4"/>`;
+      break;
+    case "solaris":
+      emblem = `<circle cx="12" cy="12" r="4.5" fill="#fde047" stroke="#f59e0b" stroke-width="1.5"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M18.4 5.6l-1.8 1.8M7.4 16.6l-1.8 1.8" stroke="#fef3c7" stroke-width="1.7"/>`;
+      break;
+    case "titan":
+      emblem = `<polygon points="6,5 18,5 20,13 15,20 9,20 4,13" fill="#334155" stroke="#2dd4bf" stroke-width="1.8"/><rect x="8.5" y="10" width="7" height="3" rx="1" fill="#5eead4"/>`;
+      break;
+    case "shade":
+      emblem = `<path d="M6 19L15 6" stroke="#94a3b8" stroke-width="2"/><path d="M15 6c3.5 0 5.5 2.5 5 6.5-2-2.5-4.5-3-7-2" fill="#14b8a6" fill-opacity="0.4" stroke="#5eead4" stroke-width="1.8"/>`;
+      break;
+    case "frost":
+    default:
+      emblem = `<path d="M12 3v18M4.2 7.5l15.6 9M19.8 7.5l-15.6 9" stroke="#7dd3fc" stroke-width="1.8"/><polygon points="12,8 15.5,12 12,16 8.5,12" fill="#e0f2fe"/>`;
+      break;
+  }
+  return `<svg viewBox="0 0 24 24" width="${size}" height="${size}" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="10.5" fill="${col}" fill-opacity="0.16" stroke="${col}" stroke-opacity="0.55" stroke-width="1.2"/>${emblem}</svg>`;
+}
+
+/**
+ * 아레나 4종 전술 미니맵 인라인 SVG 생성 (520x420 콜로세움 비율)
  */
 function renderMapMiniSvg(mapDef) {
+  const sx = (x) => Math.round((x / 520) * 68) + 2;
+  const sy = (y) => Math.round((y / 420) * 54) + 2;
   const pillars = (mapDef.pillars || [])
-    .map((p) => `<circle cx="${Math.round(p.x / 6)}" cy="${Math.round(p.y / 6)}" r="2.8" fill="#64748b" stroke="#0b0f17" stroke-width="0.9"/>`)
+    .map((p) => `<rect x="${sx(p.x) - 2.6}" y="${sy(p.y) - 2.6}" width="5.2" height="5.2" rx="1" fill="#64748b" stroke="#0b0f17" stroke-width="0.9"/>`)
     .join("");
   const shrines = (mapDef.shrines || [])
     .map((s) => {
-      const col = s.type === "HEAL_SHRINE" ? "#10b981" : s.type === "ATK_SHRINE" ? "#f97316" : s.type === "SHIELD_SHRINE" ? "#67e8f9" : "#c084fc";
-      return `<rect x="${Math.round(s.x / 6) - 1.8}" y="${Math.round(s.y / 6) - 1.8}" width="3.6" height="3.6" transform="rotate(45 ${Math.round(s.x / 6)} ${Math.round(s.y / 6)})" fill="${col}"/>`;
+      const col = s.type === "HEAL_SHRINE" ? "#22c55e" : s.type === "ATK_SHRINE" ? "#f97316" : s.type === "SHIELD_SHRINE" ? "#67e8f9" : s.type === "WARP_GATE" ? "#c084fc" : "#f59e0b";
+      return `<circle cx="${sx(s.x)}" cy="${sy(s.y)}" r="2.2" fill="${col}"/>`;
     })
     .join("");
   const hazards = (mapDef.hazards || [])
-    .map((h) => `<circle cx="${Math.round(h.x / 6)}" cy="${Math.round(h.y / 6)}" r="${Math.max(4, Math.round(h.radius / 6))}" fill="none" stroke="${mapDef.ambientColor}" stroke-width="1" stroke-dasharray="2 1.5"/>`)
+    .map((h) => `<circle cx="${sx(h.x)}" cy="${sy(h.y)}" r="${Math.max(4, Math.round((h.radius / 520) * 68))}" fill="none" stroke="${mapDef.ambientColor}" stroke-width="1" stroke-dasharray="2 1.5"/>`)
     .join("");
 
   return `
-    <svg class="map-mini-svg" viewBox="0 0 60 70" width="42" height="49" aria-hidden="true">
-      <rect x="1" y="1" width="58" height="68" rx="6" fill="${mapDef.floorColor}" stroke="${mapDef.accentColor}" stroke-opacity="0.55" stroke-width="1.2"/>
-      <circle cx="30" cy="35" r="26" fill="none" stroke="${mapDef.accentColor}" stroke-opacity="0.28" stroke-width="0.9"/>
+    <svg class="map-mini-svg" viewBox="0 0 72 58" width="52" height="42" aria-hidden="true">
+      <polygon points="10,2 62,2 70,12 70,46 62,56 10,56 2,46 2,12" fill="${mapDef.floorColor}" stroke="${mapDef.accentColor}" stroke-opacity="0.65" stroke-width="1.3"/>
+      <circle cx="36" cy="29" r="5" fill="none" stroke="#f59e0b" stroke-opacity="0.45" stroke-width="0.9"/>
       ${hazards}
       ${shrines}
       ${pillars}
@@ -1548,7 +1599,7 @@ function renderDraftScreen(state) {
             ${patchTag}
             ${getMasteryRankBadge(bestMastery(c.id))}
           </div>
-          <span class="champ-emblem">${getRoleSvg(c.role, "#F8FAFC", 18)}</span>
+          <span class="champ-emblem">${getChampionAvatarSvg(c.id, 26)}</span>
           <span class="champ-name">${escapeHtml(c.shortName)}</span>
           <span class="champ-role num">${c.role} · ${Math.round(c.baseHp * pm.hpMult)}</span>
         </button>

@@ -35,18 +35,66 @@ const PALETTE = {
  * body: 동체 / trim: 갑주 트림 / accent: 무기·디테일 / core: 에너지 코어 / cape: 망토
  */
 const CHAMP_SKINS = {
-  kylen: { body: "#4B6584", trim: "#F59E0B", accent: "#CBD5E1", core: "#FDE68A", cape: "#22324A", weapon: "SWORD", heavy: false },
-  sylvia: { body: "#0E7A5A", trim: "#D1D5DB", accent: "#34D399", core: "#A7F3D0", cape: "#064E3B", weapon: "BOW", heavy: false },
-  orion: { body: "#1E40AF", trim: "#F8FAFC", accent: "#93C5FD", core: "#FFFFFF", cape: "#172554", weapon: "STAFF_STAR", heavy: false },
-  balrog: { body: "#7F1D1D", trim: "#F97316", accent: "#FDBA74", core: "#FB923C", cape: "#450A0A", weapon: "SHIELD", heavy: true },
-  nyx: { body: "#151B26", trim: "#8B5CF6", accent: "#C4B5FD", core: "#A78BFA", cape: "#05070B", weapon: "DAGGERS", heavy: false },
-  ignis: { body: "#B91C1C", trim: "#F59E0B", accent: "#FCD34D", core: "#FBBF24", cape: "#6B1414", weapon: "FLAME", heavy: false },
-  vex: { body: "#334155", trim: "#22D3EE", accent: "#67E8F9", core: "#22D3EE", cape: "#1B2433", weapon: "RIFLE", heavy: false },
-  lyra: { body: "#A23B5A", trim: "#F5F0E6", accent: "#FDA4AF", core: "#FFE4E6", cape: "#5E1F33", weapon: "WAND", heavy: false },
-  solaris: { body: "#A16207", trim: "#FEF3C7", accent: "#FDE047", core: "#FFFBEB", cape: "#5C3310", weapon: "LANCE", heavy: false },
-  titan: { body: "#475569", trim: "#94A3B8", accent: "#2DD4BF", core: "#5EEAD4", cape: "#1B2433", weapon: "GAUNTLET", heavy: true },
-  shade: { body: "#2E2A6B", trim: "#14B8A6", accent: "#5EEAD4", core: "#99F6E4", cape: "#16133A", weapon: "SCYTHE", heavy: false },
-  frost: { body: "#0369A1", trim: "#E0F2FE", accent: "#7DD3FC", core: "#F0F9FF", cape: "#0C3A5A", weapon: "ICE_STAFF", heavy: false }
+  kylen: {
+    body: "#3B5270", trim: "#F59E0B", accent: "#E2E8F0", core: "#FDE68A",
+    cape: "#B91C1C", hair: "#F8FAFC", eye: "#FDE047", skin: "#F1C7A5",
+    weapon: "KATANA", arch: "SAMURAI", scale: 1.04
+  },
+  sylvia: {
+    body: "#0F6B4E", trim: "#D97706", accent: "#34D399", core: "#A7F3D0",
+    cape: "#064E3B", hair: "#A16207", eye: "#34D399", skin: "#F3D2B8",
+    weapon: "BOW", arch: "RANGER", scale: 0.96
+  },
+  orion: {
+    body: "#1E3A8A", trim: "#F59E0B", accent: "#93C5FD", core: "#FFFFFF",
+    cape: "#172554", hair: "#C7D2FE", eye: "#60A5FA", skin: "#C7D2FE",
+    weapon: "ORB_STAFF", arch: "ASTRAL", scale: 1.00
+  },
+  balrog: {
+    body: "#7F1D1D", trim: "#F97316", accent: "#FDBA74", core: "#FB923C",
+    cape: "#450A0A", hair: "#292524", eye: "#FACC15", skin: "#9A3412",
+    weapon: "SHIELD_AXE", arch: "JUGGERNAUT", scale: 1.24
+  },
+  nyx: {
+    body: "#1E1B2E", trim: "#8B5CF6", accent: "#C4B5FD", core: "#A78BFA",
+    cape: "#3B0764", hair: "#0F172A", eye: "#C084FC", skin: "#D4C2B2",
+    weapon: "DAGGERS", arch: "SHINOBI", scale: 0.94
+  },
+  ignis: {
+    body: "#991B1B", trim: "#F59E0B", accent: "#FCD34D", core: "#FDE047",
+    cape: "#7C2D12", hair: "#F97316", eye: "#FEF08A", skin: "#57241B",
+    weapon: "FLAME_HANDS", arch: "PYRO", scale: 0.98
+  },
+  vex: {
+    body: "#334155", trim: "#06B6D4", accent: "#67E8F9", core: "#22D3EE",
+    cape: "#1E293B", hair: "#FDE047", eye: "#22D3EE", skin: "#F1C7A5",
+    weapon: "RIFLE", arch: "GUNNER", scale: 0.96
+  },
+  lyra: {
+    body: "#9D2E54", trim: "#FEF3C7", accent: "#FDA4AF", core: "#FFE4E6",
+    cape: "#6B1D3B", hair: "#FBCFE8", eye: "#FDE68A", skin: "#F8D8C8",
+    weapon: "SCEPTER", arch: "PRIESTESS", scale: 0.95
+  },
+  solaris: {
+    body: "#92400E", trim: "#FDE047", accent: "#FEF3C7", core: "#FFFBEB",
+    cape: "#D97706", hair: "#FEF08A", eye: "#FFFBEB", skin: "#EAB68B",
+    weapon: "LANCE_SHIELD", arch: "PALADIN", scale: 1.08
+  },
+  titan: {
+    body: "#475569", trim: "#94A3B8", accent: "#2DD4BF", core: "#5EEAD4",
+    cape: "#1E293B", hair: "#334155", eye: "#2DD4BF", skin: "#64748B",
+    weapon: "GAUNTLET", arch: "GOLEM", scale: 1.28
+  },
+  shade: {
+    body: "#2E2459", trim: "#14B8A6", accent: "#5EEAD4", core: "#99F6E4",
+    cape: "#171133", hair: "#0F172A", eye: "#2DD4BF", skin: "#CBD5E1",
+    weapon: "SCYTHE", arch: "REAPER", scale: 1.03
+  },
+  frost: {
+    body: "#0369A1", trim: "#E0F2FE", accent: "#7DD3FC", core: "#F0F9FF",
+    cape: "#0C4A6E", hair: "#E0F2FE", eye: "#BAE6FD", skin: "#F3E8EE",
+    weapon: "ICE_STAFF", arch: "CRYO", scale: 0.97
+  }
 };
 
 function getSkin(f) {
@@ -57,8 +105,12 @@ function getSkin(f) {
       accent: "#E2E8F0",
       core: "#FFFFFF",
       cape: "#1B2433",
-      weapon: "SWORD",
-      heavy: false
+      hair: "#E2E8F0",
+      eye: "#38BDF8",
+      skin: "#F1C7A5",
+      weapon: "KATANA",
+      arch: "SAMURAI",
+      scale: 1.0
     }
   );
 }
@@ -186,15 +238,16 @@ export class ArenaRenderer {
    * 정적 아레나 배경을 맵 ID별로 오프스크린 캔버스에 캐싱한다.
    */
   getBackground(width, height, cx, cy, mapId = "starlight_sanctum") {
-    const key = `${mapId}:${width}x${height}@${cx},${cy}`;
+    const key = `${mapId}:${width}x${height}@${cx},${cy}@2x`;
     if (this.bgCache && this.bgKey === key) return this.bgCache;
     if (typeof document === "undefined") return null;
 
     const cvs = document.createElement("canvas");
-    cvs.width = width;
-    cvs.height = height;
+    cvs.width = width * 2;
+    cvs.height = height * 2;
     const g = cvs.getContext("2d");
     if (!g) return null;
+    g.scale(2, 2);
     buildArenaBackground(g, width, height, cx, cy, mapId);
     this.bgCache = cvs;
     this.bgKey = key;
@@ -596,152 +649,183 @@ function hash2(x, y) {
 
 const MAP_THEMES = {
   starlight_sanctum: {
-    outerBg: "#080c15",
-    floorBase: "#121a28",
-    tileA: "#162134",
-    tileB: "#0f1724",
-    tileC: "#131c2c",
-    seam: "rgba(56, 189, 248, 0.14)",
-    rimOuter: "#26354d",
-    rimInner: "rgba(56, 189, 248, 0.35)",
-    centerMark: "rgba(245, 158, 11, 0.36)",
-    pillarBody: "#1e293b",
-    pillarCap: "#334155",
-    pillarRune: "#38bdf8"
+    // Orman Temple — 사암 고대 유적 투기장
+    outerBg: "#0d120e",
+    wallTop: "#3a3528",
+    wallSide: "#211d15",
+    wallTrim: "#d4a857",
+    floorBase: "#24211b",
+    tileA: "#2c2820",
+    tileB: "#1d1a15",
+    tileC: "#26221c",
+    seam: "rgba(212, 168, 87, 0.14)",
+    rimOuter: "#4b4231",
+    rimInner: "rgba(229, 184, 105, 0.45)",
+    centerMark: "rgba(229, 184, 105, 0.42)",
+    pillarBody: "#3f382b",
+    pillarSide: "#252017",
+    pillarCap: "#5c513e",
+    pillarRune: "#22c55e",
+    brazierCol: "#4ade80"
   },
   magma_forge: {
-    outerBg: "#0d0708",
-    floorBase: "#1b1012",
-    tileA: "#241416",
-    tileB: "#150c0e",
-    tileC: "#1e1214",
-    seam: "rgba(249, 115, 22, 0.20)",
-    rimOuter: "#451a17",
+    // Blackstone Arena — 검투장 용암 투기장
+    outerBg: "#0c0709",
+    wallTop: "#332224",
+    wallSide: "#191012",
+    wallTrim: "#f97316",
+    floorBase: "#1e171b",
+    tileA: "#271d22",
+    tileB: "#171115",
+    tileC: "#21191e",
+    seam: "rgba(249, 115, 22, 0.18)",
+    rimOuter: "#4a2722",
     rimInner: "rgba(249, 115, 22, 0.45)",
-    centerMark: "rgba(249, 115, 22, 0.42)",
-    pillarBody: "#291b18",
-    pillarCap: "#442923",
-    pillarRune: "#fb923c"
+    centerMark: "rgba(249, 115, 22, 0.45)",
+    pillarBody: "#372729",
+    pillarSide: "#1f1517",
+    pillarCap: "#52383a",
+    pillarRune: "#fb923c",
+    brazierCol: "#f97316"
   },
   frost_citadel: {
-    outerBg: "#070f17",
-    floorBase: "#0f1d2b",
-    tileA: "#15283a",
-    tileB: "#0b1622",
-    tileC: "#122232",
-    seam: "rgba(103, 232, 249, 0.18)",
-    rimOuter: "#1e3a52",
+    // Mount Araz — 설산 고원 석조 성소
+    outerBg: "#070e16",
+    wallTop: "#273b4f",
+    wallSide: "#14212e",
+    wallTrim: "#67e8f9",
+    floorBase: "#14202c",
+    tileA: "#1b2c3b",
+    tileB: "#101924",
+    tileC: "#172534",
+    seam: "rgba(103, 232, 249, 0.16)",
+    rimOuter: "#2b4963",
     rimInner: "rgba(103, 232, 249, 0.45)",
-    centerMark: "rgba(103, 232, 249, 0.38)",
-    pillarBody: "#16334a",
-    pillarCap: "#38bdf8",
-    pillarRune: "#e0f2fe"
+    centerMark: "rgba(103, 232, 249, 0.42)",
+    pillarBody: "#274159",
+    pillarSide: "#162738",
+    pillarCap: "#3c6180",
+    pillarRune: "#bae6fd",
+    brazierCol: "#38bdf8"
   },
   void_nexus: {
-    outerBg: "#080612",
-    floorBase: "#131024",
-    tileA: "#1a1530",
-    tileB: "#0e0b1c",
-    tileC: "#161229",
-    seam: "rgba(168, 85, 247, 0.22)",
-    rimOuter: "#332252",
-    rimInner: "rgba(168, 85, 247, 0.48)",
-    centerMark: "rgba(16, 185, 129, 0.38)",
-    pillarBody: "#24193d",
-    pillarCap: "#4c1d95",
-    pillarRune: "#c084fc"
+    // Dragon Garden — 황실 청옥·진홍 정원 투기장
+    outerBg: "#071012",
+    wallTop: "#1f3a3d",
+    wallSide: "#102124",
+    wallTrim: "#2dd4bf",
+    floorBase: "#132225",
+    tileA: "#182d31",
+    tileB: "#0f1c1f",
+    tileC: "#15272b",
+    seam: "rgba(45, 212, 191, 0.17)",
+    rimOuter: "#284d52",
+    rimInner: "rgba(45, 212, 191, 0.48)",
+    centerMark: "rgba(245, 158, 11, 0.45)",
+    pillarBody: "#224044",
+    pillarSide: "#122427",
+    pillarCap: "#2d575c",
+    pillarRune: "#f59e0b",
+    brazierCol: "#f59e0b"
   }
 };
 
+function traceColosseumPath(g, width, height, insetX, insetY, chamfer) {
+  const x0 = insetX;
+  const x1 = width - insetX;
+  const y0 = insetY;
+  const y1 = height - insetY;
+  g.beginPath();
+  g.moveTo(x0 + chamfer, y0);
+  g.lineTo(x1 - chamfer, y0);
+  g.lineTo(x1, y0 + chamfer);
+  g.lineTo(x1, y1 - chamfer);
+  g.lineTo(x1 - chamfer, y1);
+  g.lineTo(x0 + chamfer, y1);
+  g.lineTo(x0, y1 - chamfer);
+  g.lineTo(x0, y0 + chamfer);
+  g.closePath();
+}
+
+function getBrazierPoints(width, height) {
+  return [
+    { x: 52, y: 42 },
+    { x: width - 52, y: 42 },
+    { x: 52, y: height - 42 },
+    { x: width - 52, y: height - 42 }
+  ];
+}
+
 function buildArenaBackground(g, width, height, cx, cy, mapId = "starlight_sanctum") {
-  const R = 176;
   const theme = MAP_THEMES[mapId] || MAP_THEMES.starlight_sanctum;
   const mapDef = getArenaMapById(mapId);
 
-  // 바깥 딥 슬레이트 + 타일 노이즈
+  // 바깥 투기장 석조 성곽 베이스
   g.fillStyle = theme.outerBg;
   g.fillRect(0, 0, width, height);
-  const T = 12;
-  for (let ty = 0; ty < Math.ceil(height / T); ty++) {
-    for (let tx = 0; tx < Math.ceil(width / T); tx++) {
-      const n = hash2(tx + mapId.length * 7, ty);
-      if (n > 0.58) {
-        g.fillStyle = theme.tileB;
-        g.fillRect(tx * T, ty * T, T - 1, T - 1);
-      }
-    }
+
+  // 외곽 성벽 입체 섀도우 & 두꺼운 성벽 림
+  traceColosseumPath(g, width, height, 10, 8, 62);
+  g.fillStyle = theme.wallSide;
+  g.fill();
+  g.strokeStyle = "#06080d";
+  g.lineWidth = 3;
+  g.stroke();
+
+  traceColosseumPath(g, width, height, 14, 12, 58);
+  g.fillStyle = theme.wallTop;
+  g.fill();
+  g.strokeStyle = theme.rimOuter;
+  g.lineWidth = 2;
+  g.stroke();
+
+  // 성벽 상단 돌 블록 이음선
+  g.strokeStyle = "rgba(0, 0, 0, 0.35)";
+  g.lineWidth = 1;
+  for (let x = 80; x <= width - 80; x += 36) {
+    g.beginPath();
+    g.moveTo(x, 10);
+    g.lineTo(x, 22);
+    g.moveTo(x, height - 22);
+    g.lineTo(x, height - 10);
+    g.stroke();
   }
 
-  // 단상 그림자
-  g.beginPath();
-  g.arc(cx, cy + 5, R + 3, 0, Math.PI * 2);
-  g.fillStyle = "rgba(0, 0, 0, 0.65)";
-  g.fill();
-
-  // 경기장 바닥 (패널 타일)
+  // 경기장 내부 바닥 클리핑
   g.save();
-  g.beginPath();
-  g.arc(cx, cy, R, 0, Math.PI * 2);
+  traceColosseumPath(g, width, height, 22, 20, 52);
   g.clip();
 
   g.fillStyle = theme.floorBase;
   g.fillRect(0, 0, width, height);
 
-  const P = 24;
+  // 배틀라이트식 대형 사각 석판 타일 패턴
+  const P = 32;
   const ox = cx % P;
   const oy = cy % P;
   for (let py = -1; py < Math.ceil(height / P) + 1; py++) {
     for (let px = -1; px < Math.ceil(width / P) + 1; px++) {
       const x = ox + px * P;
       const y = oy + py * P;
-      const n = hash2(px + 50, py + 90 + mapId.length);
-      g.fillStyle = n > 0.7 ? theme.tileA : n < 0.2 ? theme.tileB : theme.tileC;
+      const n = hash2(px + 37, py + 83 + mapId.length * 11);
+      g.fillStyle = n > 0.68 ? theme.tileA : n < 0.24 ? theme.tileB : theme.tileC;
       g.fillRect(x + 1, y + 1, P - 2, P - 2);
-      if (n > 0.8) {
-        g.fillStyle = theme.seam;
-        g.fillRect(x + 3, y + 3, 2, 2);
-        g.fillRect(x + P - 5, y + P - 5, 2, 2);
+      // 미세 석재 균열 & 베벨 하이라이트
+      g.fillStyle = "rgba(255, 255, 255, 0.03)";
+      g.fillRect(x + 2, y + 2, P - 4, 1);
+      if (n > 0.78) {
+        g.strokeStyle = "rgba(0, 0, 0, 0.28)";
+        g.lineWidth = 1;
+        g.beginPath();
+        g.moveTo(x + 6, y + 8);
+        g.lineTo(x + 15, y + 16);
+        g.lineTo(x + 19, y + 24);
+        g.stroke();
       }
     }
   }
 
-  // 맵 고유 바닥 문양
-  if (mapId === "magma_forge") {
-    // 용암 균열선
-    g.strokeStyle = "rgba(239, 68, 68, 0.25)";
-    g.lineWidth = 2;
-    for (let i = 0; i < 6; i++) {
-      const a = (i * Math.PI) / 3 + 0.3;
-      g.beginPath();
-      g.moveTo(cx + Math.cos(a) * 65, cy + Math.sin(a) * 65);
-      g.lineTo(cx + Math.cos(a + 0.14) * 115, cy + Math.sin(a + 0.14) * 115);
-      g.lineTo(cx + Math.cos(a - 0.08) * 165, cy + Math.sin(a - 0.08) * 165);
-      g.stroke();
-    }
-  } else if (mapId === "frost_citadel") {
-    // 빙하 결정 라인
-    g.strokeStyle = "rgba(186, 230, 253, 0.18)";
-    g.lineWidth = 1.5;
-    for (let i = 0; i < 6; i++) {
-      const a = (i * Math.PI) / 3;
-      g.beginPath();
-      g.moveTo(cx, cy);
-      g.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
-      g.stroke();
-    }
-  } else if (mapId === "void_nexus") {
-    // 차원 도약문 대각 링크선
-    g.strokeStyle = "rgba(168, 85, 247, 0.22)";
-    g.lineWidth = 1.5;
-    g.setLineDash([4, 6]);
-    g.beginPath();
-    g.moveTo(78, 118);
-    g.lineTo(282, 302);
-    g.stroke();
-    g.setLineDash([]);
-  }
-
-  // 전술 그리드 심(Seam)
+  // 타일 줄눈
   g.strokeStyle = theme.seam;
   g.lineWidth = 1;
   for (let x = ox; x < width; x += P) {
@@ -757,138 +841,176 @@ function buildArenaBackground(g, width, height, cx, cy, mapId = "starlight_sanct
     g.stroke();
   }
 
-  // 진영 스폰 존 틴트
-  const blueTint = g.createLinearGradient(cx - R, 0, cx - 40, 0);
-  blueTint.addColorStop(0, "rgba(56, 189, 248, 0.11)");
+  // 맵별 바닥 고유 문양 & 이끼/균열/황실 장식
+  if (mapId === "starlight_sanctum") {
+    // Orman Temple: 이끼 패치 + 고대 원형 장식
+    for (let i = 0; i < 8; i++) {
+      const mx = 75 + hash2(i, 11) * (width - 150);
+      const my = 60 + hash2(i, 29) * (height - 120);
+      g.fillStyle = "rgba(34, 197, 94, 0.08)";
+      g.beginPath();
+      g.ellipse(mx, my, 18, 10, hash2(i, 3), 0, Math.PI * 2);
+      g.fill();
+    }
+  } else if (mapId === "magma_forge") {
+    // Blackstone Arena: 붉은 카펫 러너 & 용암 틈새
+    g.fillStyle = "rgba(185, 28, 28, 0.14)";
+    g.fillRect(28, cy - 26, width - 56, 52);
+    g.strokeStyle = "rgba(249, 115, 22, 0.25)";
+    g.lineWidth = 1.5;
+    g.strokeRect(28, cy - 26, width - 56, 52);
+  } else if (mapId === "frost_citadel") {
+    // Mount Araz: 설산 빙하 결정 라인
+    g.strokeStyle = "rgba(186, 230, 253, 0.14)";
+    g.lineWidth = 1.5;
+    for (let i = 0; i < 8; i++) {
+      const a = (i * Math.PI) / 4;
+      g.beginPath();
+      g.moveTo(cx, cy);
+      g.lineTo(cx + Math.cos(a) * 230, cy + Math.sin(a) * 230);
+      g.stroke();
+    }
+  } else if (mapId === "void_nexus") {
+    // Dragon Garden: 진홍 황실 비단 대각 장식 + 연못 외곽
+    g.strokeStyle = "rgba(245, 158, 11, 0.20)";
+    g.lineWidth = 1.5;
+    g.strokeRect(48, 44, width - 96, height - 88);
+    g.strokeStyle = "rgba(45, 212, 191, 0.22)";
+    g.setLineDash([5, 5]);
+    g.beginPath();
+    g.moveTo(110, 114);
+    g.lineTo(410, 306);
+    g.stroke();
+    g.setLineDash([]);
+  }
+
+  // 좌우 팀 스폰 성문 아치 & 바닥 진영 틴트
+  const blueTint = g.createLinearGradient(20, 0, 135, 0);
+  blueTint.addColorStop(0, "rgba(56, 189, 248, 0.18)");
   blueTint.addColorStop(1, "rgba(56, 189, 248, 0)");
   g.fillStyle = blueTint;
-  g.fillRect(cx - R, 0, R - 40, height);
+  g.fillRect(20, cy - 115, 115, 230);
 
-  const redTint = g.createLinearGradient(cx + R, 0, cx + 40, 0);
-  redTint.addColorStop(0, "rgba(244, 63, 94, 0.11)");
+  const redTint = g.createLinearGradient(width - 20, 0, width - 135, 0);
+  redTint.addColorStop(0, "rgba(244, 63, 94, 0.18)");
   redTint.addColorStop(1, "rgba(244, 63, 94, 0)");
   g.fillStyle = redTint;
-  g.fillRect(cx + 40, 0, R - 40, height);
+  g.fillRect(width - 135, cy - 115, 115, 230);
 
-  // 중앙 분할선
-  g.strokeStyle = "rgba(148, 163, 184, 0.16)";
+  // 중앙 교전 대시 라인
+  g.strokeStyle = "rgba(148, 163, 184, 0.14)";
   g.setLineDash([6, 6]);
   g.beginPath();
-  g.moveTo(cx + 0.5, cy - R);
-  g.lineTo(cx + 0.5, cy + R);
+  g.moveTo(cx, 24);
+  g.lineTo(cx, height - 24);
   g.stroke();
   g.setLineDash([]);
 
-  // 스포트라이트 (상단 조명)
-  const spot = g.createRadialGradient(cx, cy - 40, 10, cx, cy, R);
+  // 상단 스포트라이트
+  const spot = g.createRadialGradient(cx, cy - 25, 20, cx, cy, 260);
   spot.addColorStop(0, "rgba(255, 255, 255, 0.08)");
-  spot.addColorStop(0.6, "rgba(255, 255, 255, 0.02)");
-  spot.addColorStop(1, "rgba(0, 0, 0, 0.36)");
+  spot.addColorStop(0.65, "rgba(255, 255, 255, 0.01)");
+  spot.addColorStop(1, "rgba(0, 0, 0, 0.34)");
   g.fillStyle = spot;
   g.fillRect(0, 0, width, height);
   g.restore();
 
-  // 진영별 스폰 아크
-  const drawSpawnArc = (startDeg, endDeg, color) => {
-    const a0 = (startDeg * Math.PI) / 180;
-    const a1 = (endDeg * Math.PI) / 180;
-    g.beginPath();
-    g.arc(cx, cy, 132, a0, a1);
-    g.arc(cx, cy, 108, a1, a0, true);
-    g.closePath();
-    g.fillStyle = color.replace("1)", "0.07)");
-    g.fill();
-    g.beginPath();
-    g.arc(cx, cy, 132, a0, a1);
-    g.strokeStyle = color.replace("1)", "0.65)");
-    g.lineWidth = 2;
-    g.stroke();
-    g.beginPath();
-    g.arc(cx, cy, 108, a0, a1);
-    g.strokeStyle = color.replace("1)", "0.3)");
-    g.lineWidth = 1;
-    g.stroke();
-    for (const a of [a0, a1]) {
-      g.beginPath();
-      g.moveTo(cx + Math.cos(a) * 104, cy + Math.sin(a) * 104);
-      g.lineTo(cx + Math.cos(a) * 136, cy + Math.sin(a) * 136);
-      g.strokeStyle = color.replace("1)", "0.8)");
-      g.lineWidth = 2;
-      g.stroke();
-    }
-  };
-  drawSpawnArc(145, 215, "rgba(56, 189, 248, 1)");
-  drawSpawnArc(-35, 35, "rgba(244, 63, 94, 1)");
+  // 경기장 내부 성벽 테두리 (입체 벽면 단차)
+  traceColosseumPath(g, width, height, 22, 20, 52);
+  g.strokeStyle = theme.wallSide;
+  g.lineWidth = 4;
+  g.stroke();
+  traceColosseumPath(g, width, height, 22, 20, 52);
+  g.strokeStyle = theme.rimInner;
+  g.lineWidth = 1.4;
+  g.stroke();
 
-  // 중앙 오브젝트 구역 마킹
+  // 좌우 철문 게이트 아치 (Blue / Red Spawn Gates)
+  for (const gate of [
+    { x: 16, col: "#38bdf8", dir: 1 },
+    { x: width - 22, col: "#f43f5e", dir: -1 }
+  ]) {
+    g.fillStyle = "#0b0f17";
+    g.fillRect(gate.x, cy - 58, 8, 116);
+    g.strokeStyle = gate.col;
+    g.lineWidth = 1.5;
+    g.strokeRect(gate.x, cy - 58, 8, 116);
+    for (let gy = cy - 46; gy <= cy + 46; gy += 18) {
+      g.fillStyle = "rgba(226, 232, 240, 0.45)";
+      g.fillRect(gate.x + 1, gy, 6, 2);
+    }
+  }
+
+  // 중앙 오브 제단 (Battlerite Center Pedestal)
   g.beginPath();
-  g.arc(cx, cy, 55, 0, Math.PI * 2);
+  g.arc(cx, cy, 48, 0, Math.PI * 2);
+  g.fillStyle = "rgba(0, 0, 0, 0.22)";
+  g.fill();
   g.strokeStyle = theme.centerMark;
-  g.lineWidth = 1.5;
-  g.setLineDash([3, 5]);
+  g.lineWidth = 1.8;
+  g.stroke();
+
+  g.beginPath();
+  g.arc(cx, cy, 32, 0, Math.PI * 2);
+  g.strokeStyle = theme.rimInner;
+  g.lineWidth = 1.2;
+  g.setLineDash([4, 4]);
   g.stroke();
   g.setLineDash([]);
 
-  g.beginPath();
-  g.moveTo(cx, cy - 26);
-  g.lineTo(cx + 26, cy);
-  g.lineTo(cx, cy + 26);
-  g.lineTo(cx - 26, cy);
-  g.closePath();
-  g.strokeStyle = theme.centerMark;
-  g.lineWidth = 1;
-  g.stroke();
-
-  // 대각 L-브래킷
-  for (let k = 0; k < 4; k++) {
-    const a = Math.PI / 4 + (k * Math.PI) / 2;
-    const bx = cx + Math.cos(a) * 66;
-    const by = cy + Math.sin(a) * 66;
-    const sx = Math.sign(Math.cos(a));
-    const sy = Math.sign(Math.sin(a));
+  // 8방향 제단 룬 눈금
+  for (let i = 0; i < 8; i++) {
+    const a = (i * Math.PI) / 4;
     g.beginPath();
-    g.moveTo(bx - sx * 9, by);
-    g.lineTo(bx, by);
-    g.lineTo(bx, by - sy * 9);
-    g.strokeStyle = theme.rimInner;
-    g.lineWidth = 2;
+    g.moveTo(cx + Math.cos(a) * 34, cy + Math.sin(a) * 34);
+    g.lineTo(cx + Math.cos(a) * 46, cy + Math.sin(a) * 46);
+    g.strokeStyle = theme.centerMark;
+    g.lineWidth = i % 2 === 0 ? 2 : 1;
     g.stroke();
   }
 
-  // 외곽 링 + 눈금
-  g.beginPath();
-  g.arc(cx, cy, R, 0, Math.PI * 2);
-  g.strokeStyle = theme.rimOuter;
-  g.lineWidth = 4;
-  g.stroke();
-  g.beginPath();
-  g.arc(cx, cy, R - 6, 0, Math.PI * 2);
-  g.strokeStyle = theme.rimInner;
-  g.lineWidth = 1;
-  g.stroke();
-  for (let d = 0; d < 360; d += 10) {
-    const a = (d * Math.PI) / 180;
-    const major = d % 90 === 0;
+  // 4모서리 코너 화로 석조 베이스
+  for (const br of getBrazierPoints(width, height)) {
     g.beginPath();
-    g.moveTo(cx + Math.cos(a) * (R - (major ? 12 : 8)), cy + Math.sin(a) * (R - (major ? 12 : 8)));
-    g.lineTo(cx + Math.cos(a) * (R - 3), cy + Math.sin(a) * (R - 3));
-    g.strokeStyle = major ? theme.centerMark : "rgba(100, 116, 139, 0.45)";
-    g.lineWidth = major ? 2 : 1;
+    g.arc(br.x, br.y, 11, 0, Math.PI * 2);
+    g.fillStyle = theme.wallSide;
+    g.fill();
+    g.strokeStyle = theme.wallTrim;
+    g.lineWidth = 1.5;
     g.stroke();
+    g.beginPath();
+    g.arc(br.x, br.y, 6, 0, Math.PI * 2);
+    g.fillStyle = "#090d14";
+    g.fill();
   }
 
-  // 상단 워터마크 맵 이름
+  // 상단 성벽 중앙 맵 영문 워터마크
   g.font = "800 8px ui-monospace, Consolas, monospace";
   g.textAlign = "center";
-  g.fillStyle = "rgba(226, 232, 240, 0.25)";
-  g.fillText(String(mapDef.subtitle || mapId).toUpperCase(), cx, cy - R + 22);
+  g.fillStyle = "rgba(241, 245, 249, 0.42)";
+  g.fillText(String(mapDef.subtitle || mapId).toUpperCase(), cx, 16);
+}
 
-  // 비네팅
-  const vig = g.createRadialGradient(cx, cy, R * 0.75, cx, cy, Math.max(width, height) * 0.75);
-  vig.addColorStop(0, "rgba(0, 0, 0, 0)");
-  vig.addColorStop(1, "rgba(0, 0, 0, 0.62)");
-  g.fillStyle = vig;
-  g.fillRect(0, 0, width, height);
+function drawArenaBraziers(ctx, width, height, mapId) {
+  const theme = MAP_THEMES[mapId] || MAP_THEMES.starlight_sanctum;
+  for (const br of getBrazierPoints(width, height)) {
+    const flicker = 1 + Math.sin(VS.clock * 11 + br.x) * 0.16;
+    const glow = ctx.createRadialGradient(br.x, br.y, 2, br.x, br.y, 24 * flicker);
+    glow.addColorStop(0, theme.brazierCol);
+    glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+    ctx.save();
+    ctx.globalAlpha = 0.35;
+    ctx.fillStyle = glow;
+    ctx.beginPath();
+    ctx.arc(br.x, br.y, 24 * flicker, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.globalAlpha = 1;
+    ctx.beginPath();
+    ctx.arc(br.x, br.y - 1, 4.2 * flicker, 0, Math.PI * 2);
+    ctx.fillStyle = "#FEF3C7";
+    ctx.fill();
+    ctx.restore();
+  }
 }
 
 /* ------------------------------------------------------------------ */
@@ -959,57 +1081,61 @@ function drawMapHazards(ctx, combat) {
 function drawMapShrines(ctx, combat) {
   for (const s of combat.arena.shrines || []) {
     ctx.save();
+    // 배틀라이트 그린 체력 오브 / 오렌지 에너지·공격 오브 / 시안 수호 / 보라 차원문
     const col =
-      s.type === "HEAL_SHRINE" ? PALETTE.heal :
-      s.type === "ATK_SHRINE" ? "#f97316" :
-      s.type === "SHIELD_SHRINE" ? "#67e8f9" :
-      s.type === "WARP_GATE" ? "#c084fc" :
-      "#a855f7";
+      s.type === "HEAL_SHRINE" ? "#22C55E" :
+      s.type === "ATK_SHRINE" || s.type === "ENERGY_SHRINE" ? "#F97316" :
+      s.type === "SHIELD_SHRINE" ? "#67E8F9" :
+      "#C084FC";
 
-    // 받침대
+    // 육각 석조 받침대
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const a = (i * Math.PI) / 3;
       const vx = s.x + Math.cos(a) * s.radius;
-      const vy = s.y + Math.sin(a) * s.radius;
+      const vy = s.y + Math.sin(a) * s.radius * 0.85;
       if (i === 0) ctx.moveTo(vx, vy);
       else ctx.lineTo(vx, vy);
     }
     ctx.closePath();
-    ctx.fillStyle = s.ready ? "rgba(19, 26, 38, 0.92)" : "rgba(11, 15, 23, 0.75)";
+    ctx.fillStyle = s.ready ? "rgba(15, 23, 42, 0.9)" : "rgba(11, 15, 23, 0.72)";
     ctx.fill();
     ctx.strokeStyle = s.ready ? col : "rgba(100, 116, 139, 0.45)";
-    ctx.lineWidth = s.ready ? 2 : 1;
+    ctx.lineWidth = s.ready ? 1.8 : 1;
     ctx.stroke();
 
     if (s.ready) {
-      const bob = Math.sin(VS.clock * 4 + s.x) * 2;
-      const pulseR = s.radius + 3 + Math.sin(VS.clock * 5) * 1.5;
+      const bob = Math.sin(VS.clock * 3.8 + s.x) * 2.2;
+      const oy = s.y - 3 + bob;
+      // 글로우
+      const glow = ctx.createRadialGradient(s.x, oy, 2, s.x, oy, s.radius + 5);
+      glow.addColorStop(0, col);
+      glow.addColorStop(1, "rgba(0, 0, 0, 0)");
+      ctx.globalAlpha = 0.42;
+      ctx.fillStyle = glow;
       ctx.beginPath();
-      ctx.arc(s.x, s.y, pulseR, 0, Math.PI * 2);
-      ctx.strokeStyle = col;
-      ctx.globalAlpha = 0.45;
-      ctx.lineWidth = 1.2;
-      ctx.stroke();
+      ctx.arc(s.x, oy, s.radius + 5, 0, Math.PI * 2);
+      ctx.fill();
       ctx.globalAlpha = 1;
 
       if (s.type === "WARP_GATE") {
         ctx.beginPath();
-        ctx.arc(s.x, s.y, 7, VS.clock * 3, VS.clock * 3 + Math.PI * 1.5);
+        ctx.arc(s.x, oy, 7.5, VS.clock * 3, VS.clock * 3 + Math.PI * 1.55);
         ctx.strokeStyle = col;
-        ctx.lineWidth = 2.2;
+        ctx.lineWidth = 2.4;
         ctx.stroke();
       } else {
+        // 배틀라이트 구슬 구체
+        const orbGrad = ctx.createRadialGradient(s.x - 2, oy - 2, 1, s.x, oy, 7.5);
+        orbGrad.addColorStop(0, "#FFFFFF");
+        orbGrad.addColorStop(0.45, col);
+        orbGrad.addColorStop(1, "#0B0F17");
         ctx.beginPath();
-        ctx.moveTo(s.x, s.y - 7 + bob);
-        ctx.lineTo(s.x + 5, s.y + bob);
-        ctx.lineTo(s.x, s.y + 7 + bob);
-        ctx.lineTo(s.x - 5, s.y + bob);
-        ctx.closePath();
-        ctx.fillStyle = col;
+        ctx.arc(s.x, oy, 7.2, 0, Math.PI * 2);
+        ctx.fillStyle = orbGrad;
         ctx.fill();
-        ctx.strokeStyle = PALETTE.outline;
-        ctx.lineWidth = 1;
+        ctx.strokeStyle = "#06080d";
+        ctx.lineWidth = 1.2;
         ctx.stroke();
       }
     } else {
@@ -1017,7 +1143,7 @@ function drawMapShrines(ctx, combat) {
       ctx.beginPath();
       ctx.arc(s.x, s.y, s.radius - 3, -Math.PI / 2, -Math.PI / 2 + Math.PI * 2 * frac);
       ctx.strokeStyle = col;
-      ctx.globalAlpha = 0.6;
+      ctx.globalAlpha = 0.65;
       ctx.lineWidth = 2;
       ctx.stroke();
     }
@@ -1029,52 +1155,57 @@ function drawMapPillars(ctx, combat) {
   const theme = MAP_THEMES[combat.arena.mapId] || MAP_THEMES.starlight_sanctum;
   for (const p of combat.arena.pillars || []) {
     ctx.save();
-    // 그림자
+    const r = p.radius;
+    // 2.5D 지면 그림자
     ctx.beginPath();
-    ctx.ellipse(p.x + 2, p.y + 6, p.radius * 1.08, p.radius * 0.72, 0, 0, Math.PI * 2);
-    ctx.fillStyle = "rgba(0, 0, 0, 0.55)";
+    ctx.ellipse(p.x + 3, p.y + 8, r * 1.15, r * 0.72, 0, 0, Math.PI * 2);
+    ctx.fillStyle = "rgba(0, 0, 0, 0.58)";
     ctx.fill();
 
-    // 기둥 본체 (입체 압출)
-    ctx.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = Math.PI / 8 + (i * Math.PI) / 4;
-      const vx = p.x + Math.cos(a) * p.radius;
-      const vy = p.y + 3 + Math.sin(a) * p.radius;
-      if (i === 0) ctx.moveTo(vx, vy);
-      else ctx.lineTo(vx, vy);
-    }
-    ctx.closePath();
-    ctx.fillStyle = "#090d14";
-    ctx.fill();
+    // 입체 벽면 베이스 (둥근 사각 블록 압출)
+    const bx = p.x - r * 0.88;
+    const by = p.y - r * 0.65;
+    const bw = r * 1.76;
+    const bh = r * 1.48;
+    const extrude = 7;
 
-    // 상단 면
+    // 정면/측면 어두운 석벽
     ctx.beginPath();
-    for (let i = 0; i < 8; i++) {
-      const a = Math.PI / 8 + (i * Math.PI) / 4;
-      const vx = p.x + Math.cos(a) * p.radius;
-      const vy = p.y - 2 + Math.sin(a) * p.radius;
-      if (i === 0) ctx.moveTo(vx, vy);
-      else ctx.lineTo(vx, vy);
-    }
-    ctx.closePath();
+    ctx.roundRect(bx, by + extrude, bw, bh * 0.9, 6);
+    ctx.fillStyle = theme.pillarSide || "#141820";
+    ctx.fill();
+    ctx.strokeStyle = "#05070c";
+    ctx.lineWidth = 1.8;
+    ctx.stroke();
+
+    // 상단 지붕 석판
+    ctx.beginPath();
+    ctx.roundRect(bx, by - 3, bw, bh * 0.88, 6);
     ctx.fillStyle = p.hitFlash > 0 ? "#e2e8f0" : theme.pillarBody;
     ctx.fill();
-    ctx.strokeStyle = PALETTE.outline;
-    ctx.lineWidth = 1.6;
+    ctx.strokeStyle = "#05070c";
+    ctx.lineWidth = 1.8;
     ctx.stroke();
 
-    // 내부 캡 + 룬 문양
+    // 상단 베벨 하이라이트
     ctx.beginPath();
-    ctx.arc(p.x, p.y - 2, p.radius * 0.62, 0, Math.PI * 2);
+    ctx.roundRect(bx + 3, by, bw - 6, bh * 0.88 - 6, 4);
     ctx.fillStyle = theme.pillarCap;
     ctx.fill();
-    ctx.strokeStyle = theme.pillarRune;
-    ctx.lineWidth = 1.2;
+    ctx.strokeStyle = "rgba(255, 255, 255, 0.14)";
+    ctx.lineWidth = 1;
     ctx.stroke();
 
+    // 중앙 룬 문양
+    ctx.beginPath();
+    ctx.moveTo(p.x, p.y - 8);
+    ctx.lineTo(p.x + 6, p.y - 2);
+    ctx.lineTo(p.x, p.y + 4);
+    ctx.lineTo(p.x - 6, p.y - 2);
+    ctx.closePath();
     ctx.fillStyle = theme.pillarRune;
-    ctx.fillRect(p.x - 1.5, p.y - 3.5, 3, 3);
+    ctx.globalAlpha = 0.85;
+    ctx.fill();
     ctx.restore();
   }
 }
@@ -1469,220 +1600,512 @@ function drawOrb(ctx, combat) {
 }
 
 /* ------------------------------------------------------------------ */
-/* 5. 챔피언 실루엣 (다층 파츠: 망토·동체·견갑·머리·무기·에너지 코어)  */
+/* 5. 배틀라이트 스타일 2.5D 휴머노이드 챔피언 렌더러                   */
 /* ------------------------------------------------------------------ */
 
-function drawWeapon(ctx, skin, r, layer) {
-  const o = PALETTE.outline;
+function drawHeroWeapon(ctx, skin, r, ang, swingProg) {
+  const o = "#050811";
+  const isRanged = skin.weapon === "BOW" || skin.weapon === "RIFLE" || skin.weapon === "FLAME_HANDS";
+  const aimSign = Math.cos(ang) >= 0 ? 1 : -1;
+  const swingOff = swingProg > 0
+    ? (isRanged ? 0 : Math.sin(swingProg * Math.PI - 0.35) * 1.15 * aimSign)
+    : 0;
+  const recoilPush = isRanged && swingProg > 0 ? -Math.sin(swingProg * Math.PI) * 3.5 : 0;
+
+  ctx.save();
+  // 어깨/손 중심점 (직립 몸통 측면)
+  ctx.translate(aimSign * r * 0.15, -r * 0.25);
+  ctx.rotate(ang + swingOff);
+  ctx.translate(recoilPush, 0);
   ctx.lineJoin = "round";
   ctx.lineCap = "round";
+
   switch (skin.weapon) {
-    case "SWORD": {
-      if (layer !== "front") return;
+    case "KATANA": {
+      // 손잡이 + 가드 + 휜 명도 블레이드
       ctx.beginPath();
-      ctx.moveTo(r * 0.35, r * 0.62);
-      ctx.lineTo(r * 1.55, r * 0.42);
-      ctx.strokeStyle = o;
-      ctx.lineWidth = 5;
+      ctx.moveTo(r * 0.15, 0);
+      ctx.lineTo(r * 0.55, 0);
+      ctx.strokeStyle = "#1E293B";
+      ctx.lineWidth = 3.2;
       ctx.stroke();
-      ctx.strokeStyle = skin.accent;
-      ctx.lineWidth = 3;
-      ctx.stroke();
+
       ctx.beginPath();
-      ctx.moveTo(r * 0.42, r * 0.38);
-      ctx.lineTo(r * 0.5, r * 0.88);
+      ctx.moveTo(r * 0.55, -3.8);
+      ctx.lineTo(r * 0.55, 3.8);
       ctx.strokeStyle = skin.trim;
-      ctx.lineWidth = 2.5;
+      ctx.lineWidth = 2.4;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.moveTo(r * 0.58, -1);
+      ctx.quadraticCurveTo(r * 1.25, -4, r * 1.85, -1.5);
+      ctx.lineTo(r * 1.65, 1.5);
+      ctx.lineTo(r * 0.58, 1.4);
+      ctx.closePath();
+      ctx.fillStyle = skin.accent;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.4;
       ctx.stroke();
       break;
     }
     case "BOW": {
-      if (layer !== "front") return;
       ctx.beginPath();
-      ctx.arc(r * 0.35, 0, r * 0.95, -1.05, 1.05);
+      ctx.arc(r * 0.45, 0, r * 0.92, -1.1, 1.1);
       ctx.strokeStyle = o;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 4.2;
       ctx.stroke();
-      ctx.strokeStyle = skin.trim;
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = skin.accent;
+      ctx.lineWidth = 2.2;
       ctx.stroke();
+
+      const sx = r * 0.45 + Math.cos(1.1) * r * 0.92;
+      const sy = Math.sin(1.1) * r * 0.92;
+      const pull = swingProg > 0 ? 4 : 1.5;
       ctx.beginPath();
-      ctx.moveTo(r * 0.35 + Math.cos(-1.05) * r * 0.95, Math.sin(-1.05) * r * 0.95);
-      ctx.lineTo(r * 0.35 + Math.cos(1.05) * r * 0.95, Math.sin(1.05) * r * 0.95);
-      ctx.strokeStyle = "rgba(226, 232, 240, 0.7)";
+      ctx.moveTo(sx, -sy);
+      ctx.lineTo(sx - pull, 0);
+      ctx.lineTo(sx, sy);
+      ctx.strokeStyle = "rgba(248, 250, 252, 0.85)";
       ctx.lineWidth = 1;
+      ctx.stroke();
+
+      // 화살
+      ctx.beginPath();
+      ctx.moveTo(sx - pull, 0);
+      ctx.lineTo(r * 1.65, 0);
+      ctx.strokeStyle = skin.core;
+      ctx.lineWidth = 1.6;
       ctx.stroke();
       break;
     }
-    case "STAFF_STAR":
+    case "ORB_STAFF":
     case "ICE_STAFF":
-    case "WAND": {
-      if (layer !== "front") return;
-      const len = skin.weapon === "WAND" ? r * 1.1 : r * 1.5;
+    case "SCEPTER": {
+      const len = skin.weapon === "SCEPTER" ? r * 1.35 : r * 1.65;
       ctx.beginPath();
-      ctx.moveTo(-r * 0.1, r * 0.72);
-      ctx.lineTo(len, r * 0.72);
+      ctx.moveTo(r * 0.1, 2);
+      ctx.lineTo(len, 0);
       ctx.strokeStyle = o;
       ctx.lineWidth = 4;
       ctx.stroke();
-      ctx.strokeStyle = skin.weapon === "ICE_STAFF" ? "#BAE6FD" : "#CBD5E1";
+      ctx.strokeStyle = skin.weapon === "ICE_STAFF" ? "#7DD3FC" : skin.trim;
       ctx.lineWidth = 2;
       ctx.stroke();
+
       ctx.save();
-      ctx.translate(len, r * 0.72);
+      ctx.translate(len + 2, 0);
       if (skin.weapon === "ICE_STAFF") {
         ctx.beginPath();
-        ctx.moveTo(4, 0);
-        ctx.lineTo(0, -4);
-        ctx.lineTo(-3, 0);
-        ctx.lineTo(0, 4);
+        ctx.moveTo(5, 0);
+        ctx.lineTo(0, -4.5);
+        ctx.lineTo(-3.5, 0);
+        ctx.lineTo(0, 4.5);
         ctx.closePath();
         ctx.fillStyle = skin.core;
         ctx.fill();
         ctx.strokeStyle = o;
-        ctx.lineWidth = 1;
+        ctx.lineWidth = 1.2;
         ctx.stroke();
       } else {
         ctx.beginPath();
-        for (let i = 0; i < 8; i++) {
-          const a = (i * Math.PI) / 4 + VS.clock * 2;
-          const rr = i % 2 ? 1.6 : 4;
-          ctx.lineTo(Math.cos(a) * rr, Math.sin(a) * rr);
-        }
-        ctx.closePath();
+        ctx.arc(0, 0, 4.2, 0, Math.PI * 2);
         ctx.fillStyle = skin.core;
         ctx.fill();
+        ctx.strokeStyle = skin.accent;
+        ctx.lineWidth = 1.6;
+        ctx.stroke();
       }
       ctx.restore();
       break;
     }
-    case "SHIELD": {
-      if (layer !== "front") return;
+    case "SHIELD_AXE": {
+      // 오른손 거대 전투 도끼 + 전방 흑요석 방패
       ctx.beginPath();
-      ctx.moveTo(r * 0.62, -r * 1.0);
-      ctx.lineTo(r * 1.08, -r * 0.7);
-      ctx.lineTo(r * 1.08, r * 0.35);
-      ctx.lineTo(r * 0.62, r * 0.55);
+      ctx.moveTo(r * 0.2, 3);
+      ctx.lineTo(r * 1.45, 5);
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 4;
+      ctx.stroke();
+      ctx.strokeStyle = "#57534E";
+      ctx.lineWidth = 2;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(r * 1.05, 1);
+      ctx.arc(r * 1.25, 5, 6.5, -1.2, 1.3);
       ctx.closePath();
+      ctx.fillStyle = skin.trim;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+
+      // 전방 타워 실드
+      ctx.beginPath();
+      ctx.roundRect(r * 0.55, -9.5, 6.5, 14, 2.5);
       ctx.fillStyle = skin.body;
       ctx.fill();
       ctx.strokeStyle = o;
-      ctx.lineWidth = 1.6;
+      ctx.lineWidth = 1.8;
       ctx.stroke();
-      ctx.beginPath();
-      ctx.moveTo(r * 0.85, -r * 0.75);
-      ctx.lineTo(r * 0.85, r * 0.3);
-      ctx.strokeStyle = skin.trim;
-      ctx.lineWidth = 2;
-      ctx.stroke();
-      // 마그마 균열 디테일
-      ctx.fillStyle = skin.core;
-      ctx.fillRect(r * 0.9, -r * 0.25, 2, 2);
+      ctx.fillStyle = skin.trim;
+      ctx.fillRect(r * 0.68, -6, 2.5, 7);
       break;
     }
     case "DAGGERS": {
-      if (layer !== "front") return;
       for (const s of [-1, 1]) {
         ctx.beginPath();
-        ctx.moveTo(r * 0.5, s * r * 0.62);
-        ctx.lineTo(r * 1.25, s * r * 0.78);
+        ctx.moveTo(r * 0.3, s * 4.5);
+        ctx.lineTo(r * 1.25, s * 6.5);
         ctx.strokeStyle = o;
-        ctx.lineWidth = 3.5;
+        ctx.lineWidth = 3.8;
         ctx.stroke();
-        ctx.strokeStyle = skin.trim;
-        ctx.lineWidth = 1.6;
+        ctx.strokeStyle = skin.accent;
+        ctx.lineWidth = 1.8;
         ctx.stroke();
       }
       break;
     }
-    case "FLAME": {
-      if (layer !== "front") return;
+    case "FLAME_HANDS": {
       for (const s of [-1, 1]) {
-        const fl = 1 + Math.sin(VS.clock * 18 + s) * 0.2;
-        const fx = r * 0.78;
-        const fy = s * r * 0.62;
-        const g = ctx.createRadialGradient(fx, fy, 0.5, fx, fy, 4.5 * fl);
-        g.addColorStop(0, "#FFFBEB");
-        g.addColorStop(0.45, "#FBBF24");
-        g.addColorStop(1, "rgba(220, 38, 38, 0)");
+        const fx = r * 0.85;
+        const fy = s * 5.2;
+        const fl = 1 + Math.sin(VS.clock * 16 + s) * 0.22;
+        const g = ctx.createRadialGradient(fx, fy, 0.5, fx, fy, 5.2 * fl);
+        g.addColorStop(0, "#FFFFFF");
+        g.addColorStop(0.45, "#FDE047");
+        g.addColorStop(1, "rgba(239, 68, 68, 0)");
         ctx.fillStyle = g;
         ctx.beginPath();
-        ctx.arc(fx, fy, 4.5 * fl, 0, Math.PI * 2);
+        ctx.arc(fx, fy, 5.2 * fl, 0, Math.PI * 2);
         ctx.fill();
       }
       break;
     }
     case "RIFLE": {
-      if (layer !== "front") return;
-      ctx.fillStyle = o;
-      ctx.fillRect(-r * 0.15, r * 0.18, r * 1.75, 5);
-      ctx.fillStyle = "#64748B";
-      ctx.fillRect(-r * 0.1, r * 0.22, r * 1.65, 3);
+      ctx.beginPath();
+      ctx.roundRect(r * 0.05, -2.5, r * 1.65, 5, 1.5);
+      ctx.fillStyle = "#334155";
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      ctx.fillStyle = skin.core;
+      ctx.fillRect(r * 0.45, -1, r * 1.15, 2);
       ctx.fillStyle = skin.trim;
-      ctx.fillRect(r * 1.45, r * 0.22, 3, 3);
+      ctx.fillRect(r * 1.55, -2, 3, 4);
       break;
     }
-    case "LANCE": {
-      if (layer === "back") {
-        // 등 뒤 태양 원반
-        ctx.beginPath();
-        ctx.arc(-r * 0.55, 0, r * 0.62, 0, Math.PI * 2);
-        ctx.strokeStyle = skin.accent;
-        ctx.lineWidth = 2;
-        ctx.stroke();
-        return;
-      }
+    case "LANCE_SHIELD": {
       ctx.beginPath();
-      ctx.moveTo(-r * 0.2, r * 0.6);
-      ctx.lineTo(r * 1.7, r * 0.45);
+      ctx.moveTo(r * 0.1, 3);
+      ctx.lineTo(r * 1.75, 1.5);
       ctx.strokeStyle = o;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 4.2;
       ctx.stroke();
-      ctx.strokeStyle = skin.accent;
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = skin.trim;
+      ctx.lineWidth = 2.2;
       ctx.stroke();
       ctx.beginPath();
-      ctx.moveTo(r * 1.95, r * 0.43);
-      ctx.lineTo(r * 1.6, r * 0.3);
-      ctx.lineTo(r * 1.6, r * 0.6);
+      ctx.moveTo(r * 2.1, 1.5);
+      ctx.lineTo(r * 1.65, -2.5);
+      ctx.lineTo(r * 1.65, 5.5);
       ctx.closePath();
+      ctx.fillStyle = skin.core;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+
+      ctx.beginPath();
+      ctx.arc(r * 0.58, -5.5, 5.2, 0, Math.PI * 2);
       ctx.fillStyle = skin.trim;
       ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
       break;
     }
     case "GAUNTLET": {
-      if (layer !== "front") return;
       for (const s of [-1, 1]) {
         ctx.beginPath();
-        ctx.arc(r * 0.78, s * r * 0.56, r * 0.34, 0, Math.PI * 2);
+        ctx.roundRect(r * 0.45, s * 5.8 - 3.8, 9.5, 7.6, 3);
         ctx.fillStyle = skin.trim;
         ctx.fill();
         ctx.strokeStyle = o;
-        ctx.lineWidth = 1.5;
+        ctx.lineWidth = 1.8;
         ctx.stroke();
-        ctx.fillStyle = skin.accent;
-        ctx.fillRect(r * 0.95, s * r * 0.56 - 1.5, 2.5, 3);
+        ctx.fillStyle = skin.core;
+        ctx.fillRect(r * 0.72, s * 5.8 - 1.5, 3.5, 3);
       }
       break;
     }
     case "SCYTHE": {
-      if (layer !== "front") return;
       ctx.beginPath();
-      ctx.moveTo(-r * 0.4, r * 0.95);
-      ctx.lineTo(r * 1.2, -r * 0.2);
+      ctx.moveTo(r * 0.05, 4);
+      ctx.lineTo(r * 1.45, -4);
       ctx.strokeStyle = o;
       ctx.lineWidth = 4;
       ctx.stroke();
       ctx.strokeStyle = "#94A3B8";
       ctx.lineWidth = 2;
       ctx.stroke();
+
       ctx.beginPath();
-      ctx.arc(r * 0.75, -r * 0.2, r * 0.6, -0.4, -2.2, true);
+      ctx.moveTo(r * 1.38, -4);
+      ctx.quadraticCurveTo(r * 1.75, 3, r * 1.15, 11);
+      ctx.quadraticCurveTo(r * 1.35, 3, r * 1.25, -2.5);
+      ctx.closePath();
+      ctx.fillStyle = skin.accent;
+      ctx.fill();
       ctx.strokeStyle = o;
-      ctx.lineWidth = 4;
+      ctx.lineWidth = 1.5;
       ctx.stroke();
-      ctx.strokeStyle = skin.accent;
-      ctx.lineWidth = 2;
+      break;
+    }
+    default:
+      break;
+  }
+  ctx.restore();
+}
+
+function drawHeroHead(ctx, skin, r, aimSign, lookY) {
+  const o = "#050811";
+  const hy = -r * 0.88;
+  const hr = r * 0.46;
+
+  // 뒷머리 / 등 뒤 특수 장식 (솔라리스 태양 광배 / 오리온 천구 링)
+  if (skin.arch === "PALADIN") {
+    ctx.save();
+    ctx.translate(0, hy + 2);
+    ctx.rotate(VS.clock * 0.8);
+    ctx.strokeStyle = skin.trim;
+    ctx.lineWidth = 1.6;
+    ctx.beginPath();
+    ctx.arc(0, 0, hr * 1.7, 0, Math.PI * 2);
+    ctx.stroke();
+    for (let i = 0; i < 6; i++) {
+      const a = (i * Math.PI) / 3;
+      ctx.beginPath();
+      ctx.moveTo(Math.cos(a) * hr * 1.45, Math.sin(a) * hr * 1.45);
+      ctx.lineTo(Math.cos(a) * hr * 2.05, Math.sin(a) * hr * 2.05);
+      ctx.stroke();
+    }
+    ctx.restore();
+  } else if (skin.arch === "ASTRAL") {
+    ctx.save();
+    ctx.translate(0, hy + 3);
+    ctx.rotate(VS.clock * 1.2);
+    ctx.strokeStyle = skin.trim;
+    ctx.lineWidth = 1.4;
+    ctx.beginPath();
+    ctx.ellipse(0, 0, hr * 2.1, hr * 0.72, 0.35, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.restore();
+  } else if (skin.arch === "GUNNER") {
+    // 벡스 포니테일
+    ctx.beginPath();
+    ctx.moveTo(-aimSign * hr * 0.5, hy);
+    ctx.quadraticCurveTo(-aimSign * hr * 1.6, hy - 2, -aimSign * hr * 1.8, hy + 7);
+    ctx.strokeStyle = o;
+    ctx.lineWidth = 4.5;
+    ctx.stroke();
+    ctx.strokeStyle = skin.hair;
+    ctx.lineWidth = 2.6;
+    ctx.stroke();
+  }
+
+  // 기본 두상
+  ctx.beginPath();
+  ctx.arc(0, hy, hr, 0, Math.PI * 2);
+  ctx.fillStyle = (skin.arch === "ASTRAL" || skin.arch === "REAPER" || skin.arch === "GOLEM")
+    ? skin.body
+    : skin.skin;
+  ctx.fill();
+  ctx.strokeStyle = o;
+  ctx.lineWidth = 1.8;
+  ctx.stroke();
+
+  // 눈 / 안광 / 바이저
+  const ex = aimSign * hr * 0.28;
+  const ey = hy + lookY * 1.2;
+  if (skin.arch === "GOLEM") {
+    ctx.fillStyle = "#0F172A";
+    ctx.fillRect(-hr * 0.65, hy - 2, hr * 1.3, 4);
+    ctx.fillStyle = skin.eye;
+    ctx.beginPath();
+    ctx.arc(ex * 0.8, ey, 2.3, 0, Math.PI * 2);
+    ctx.fill();
+  } else if (skin.arch === "SHINOBI") {
+    // 닌자 복면 + 빛나는 두 눈
+    ctx.beginPath();
+    ctx.arc(0, hy + 1.5, hr * 0.94, 0.15, Math.PI - 0.15);
+    ctx.fillStyle = "#0F172A";
+    ctx.fill();
+    ctx.fillStyle = skin.eye;
+    ctx.fillRect(ex - 2.8, ey - 1.5, 2.2, 1.8);
+    ctx.fillRect(ex + 1.2, ey - 1.5, 2.2, 1.8);
+  } else {
+    ctx.fillStyle = "#0F172A";
+    ctx.fillRect(ex - 2.6, ey - 1, 2, 2);
+    ctx.fillRect(ex + 1.2, ey - 1, 2, 2);
+    ctx.fillStyle = skin.eye;
+    ctx.fillRect(ex - 2.4, ey - 0.8, 1.5, 1.5);
+    ctx.fillRect(ex + 1.4, ey - 0.8, 1.5, 1.5);
+  }
+
+  // 아키타입별 투구 / 후드 / 헤어스타일
+  switch (skin.arch) {
+    case "SAMURAI": {
+      // 카일렌: 스파이키 헤어 + 금색 머리띠
+      ctx.beginPath();
+      ctx.moveTo(-hr * 1.05, hy - 1);
+      ctx.lineTo(-hr * 1.2, hy - hr * 1.15);
+      ctx.lineTo(-hr * 0.35, hy - hr * 0.85);
+      ctx.lineTo(0, hy - hr * 1.45);
+      ctx.lineTo(hr * 0.45, hy - hr * 0.95);
+      ctx.lineTo(hr * 1.15, hy - hr * 1.15);
+      ctx.lineTo(hr * 0.95, hy - 1);
+      ctx.closePath();
+      ctx.fillStyle = skin.hair;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      ctx.fillStyle = skin.trim;
+      ctx.fillRect(-hr * 0.9, hy - hr * 0.55, hr * 1.8, 2.2);
+      break;
+    }
+    case "RANGER":
+    case "ASTRAL":
+    case "REAPER": {
+      // 뾰족한 레인저/마법사/사신 후드
+      ctx.beginPath();
+      ctx.arc(0, hy - 1, hr * 1.08, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.lineTo(aimSign * hr * 0.2, hy - hr * 1.45);
+      ctx.closePath();
+      ctx.fillStyle = skin.body;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      ctx.strokeStyle = skin.trim;
+      ctx.lineWidth = 1.2;
+      ctx.stroke();
+      break;
+    }
+    case "JUGGERNAUT": {
+      // 발록: 투구 + 양옆 거대 용암 뿔
+      ctx.beginPath();
+      ctx.arc(0, hy - 1, hr * 1.05, Math.PI, 0);
+      ctx.fillStyle = "#292524";
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(s * hr * 0.75, hy - hr * 0.35);
+        ctx.quadraticCurveTo(s * hr * 1.55, hy - hr * 0.65, s * hr * 1.35, hy - hr * 1.45);
+        ctx.quadraticCurveTo(s * hr * 0.95, hy - hr * 0.9, s * hr * 0.55, hy - hr * 0.7);
+        ctx.closePath();
+        ctx.fillStyle = skin.trim;
+        ctx.fill();
+        ctx.strokeStyle = o;
+        ctx.lineWidth = 1.3;
+        ctx.stroke();
+      }
+      break;
+    }
+    case "PYRO": {
+      // 이그니스: 타오르는 화염 왕관 헤어
+      ctx.beginPath();
+      ctx.moveTo(-hr * 0.95, hy - 2);
+      ctx.lineTo(-hr * 0.7, hy - hr * 1.45);
+      ctx.lineTo(-hr * 0.2, hy - hr * 1.05);
+      ctx.lineTo(0, hy - hr * 1.75);
+      ctx.lineTo(hr * 0.25, hy - hr * 1.05);
+      ctx.lineTo(hr * 0.75, hy - hr * 1.45);
+      ctx.lineTo(hr * 0.95, hy - 2);
+      ctx.closePath();
+      ctx.fillStyle = "#FACC15";
+      ctx.fill();
+      ctx.strokeStyle = "#EA580C";
+      ctx.lineWidth = 1.4;
+      ctx.stroke();
+      break;
+    }
+    case "GUNNER": {
+      // 벡스: 시안색 전술 고글
+      ctx.fillStyle = "#0F172A";
+      ctx.fillRect(-hr * 0.95, hy - hr * 0.7, hr * 1.9, 4.5);
+      ctx.fillStyle = skin.core;
+      ctx.fillRect(ex - 3.5, hy - hr * 0.62, 7.5, 2.8);
+      break;
+    }
+    case "PRIESTESS": {
+      // 라이라: 사제 헤어 + 뿔형 머리장식
+      ctx.beginPath();
+      ctx.arc(0, hy - 1, hr * 1.06, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fillStyle = skin.hair;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+      for (const s of [-1, 1]) {
+        ctx.beginPath();
+        ctx.moveTo(s * hr * 0.55, hy - hr * 0.7);
+        ctx.lineTo(s * hr * 1.1, hy - hr * 1.45);
+        ctx.strokeStyle = skin.trim;
+        ctx.lineWidth = 2.4;
+        ctx.stroke();
+      }
+      break;
+    }
+    case "PALADIN": {
+      // 솔라리스: 황금 성기사 투구 + T자 바이저
+      ctx.beginPath();
+      ctx.arc(0, hy - 0.5, hr * 1.08, 0, Math.PI * 2);
+      ctx.fillStyle = skin.trim;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.6;
+      ctx.stroke();
+      ctx.fillStyle = "#1E293B";
+      ctx.fillRect(ex - 3.5, hy - 1.5, 7, 2.5);
+      ctx.fillRect(ex - 1.2, hy - 1.5, 2.4, 5.5);
+      break;
+    }
+    case "GOLEM": {
+      // 타이탄: 평평한 거석 투구 상판
+      ctx.beginPath();
+      ctx.roundRect(-hr * 1.05, hy - hr * 1.1, hr * 2.1, hr * 0.8, 2);
+      ctx.fillStyle = skin.trim;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
+      break;
+    }
+    case "CRYO": {
+      // 프로스트: 은발 + 얼음 왕관 티아라
+      ctx.beginPath();
+      ctx.arc(0, hy - 1, hr * 1.08, Math.PI * 0.85, Math.PI * 2.15);
+      ctx.fillStyle = skin.hair;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.3;
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(-hr * 0.65, hy - hr * 0.75);
+      ctx.lineTo(0, hy - hr * 1.55);
+      ctx.lineTo(hr * 0.65, hy - hr * 0.75);
+      ctx.closePath();
+      ctx.fillStyle = skin.accent;
+      ctx.fill();
+      ctx.strokeStyle = o;
+      ctx.lineWidth = 1.2;
       ctx.stroke();
       break;
     }
@@ -1691,128 +2114,112 @@ function drawWeapon(ctx, skin, r, layer) {
   }
 }
 
-function drawChampionBody(ctx, f, skin, r, alpha) {
+function drawChampionBody(ctx, f, skin, rRaw, alpha) {
   const o = "#050811";
+  const r = rRaw * (skin.scale || 1.0);
   const ang = f.visualFacing !== undefined ? f.visualFacing : f.facing;
+  const aimSign = Math.cos(ang) >= 0 ? 1 : -1;
+  const lookY = Math.sin(ang) * 0.35;
   const moveRatio = clamp((f.moveSpeed || 0) / 80, 0, 1);
   const stride = Math.sin(f.stridePhase || 0) * moveRatio;
   const swingProg = f.swingProg || 0;
-  const lunge = swingProg > 0 ? Math.sin(swingProg * Math.PI) * 3.2 : 0;
-  const breath = 1 + Math.sin(VS.clock * 4.2 + (f.x || 0) * 0.03) * 0.028;
+  const lunge = swingProg > 0 ? Math.sin(swingProg * Math.PI) * 3.0 : 0;
+  const bob = Math.sin(VS.clock * 4.2 + (f.x || 0) * 0.04) * 0.8 + Math.abs(stride) * 1.6;
+  const floatOff = (skin.arch === "ASTRAL" || skin.arch === "REAPER")
+    ? -3.5 + Math.sin(VS.clock * 5 + (f.x || 0)) * 1.8
+    : 0;
 
   ctx.save();
   ctx.globalAlpha *= alpha;
-  ctx.translate(f.x + Math.cos(ang) * lunge, f.y + Math.sin(ang) * lunge);
-  ctx.rotate(ang);
-  ctx.scale(breath, 2 - breath);
+  ctx.translate(
+    f.x + Math.cos(ang) * lunge,
+    f.y + Math.sin(ang) * lunge - bob + floatOff
+  );
+  ctx.lineJoin = "round";
+  ctx.lineCap = "round";
 
-  // 보폭 발 파츠 (이동 시 교차 애니메이션)
-  if (moveRatio > 0.08) {
-    for (const s of [-1, 1]) {
-      const fx = stride * s * r * 0.38;
-      const fy = s * r * 0.44;
-      ctx.beginPath();
-      ctx.ellipse(fx, fy, r * 0.24, r * 0.16, 0, 0, Math.PI * 2);
-      ctx.fillStyle = "#0f172a";
-      ctx.fill();
-      ctx.strokeStyle = skin.trim;
-      ctx.lineWidth = 1;
-      ctx.stroke();
-    }
-  }
-
-  // 다층 망토 (속도 및 보폭 연동 흔들림)
-  const sway = Math.sin(VS.clock * 6 + (f.x || 0) * 0.05) * r * (0.08 + moveRatio * 0.14);
-  const capeExtend = 1.18 + moveRatio * 0.25;
+  // 1. 망토 / 머플러 / 로브 뒷자락 (직립 뒤쪽, 이동·바람 따라 펄럭임)
+  const flutter = Math.sin(VS.clock * 7 + (f.x || 0) * 0.06) * (2.2 + moveRatio * 3.5);
   ctx.beginPath();
-  ctx.moveTo(-r * 0.15, -r * 0.72);
-  ctx.lineTo(-r * 1.0, -r * 0.62 + sway * 0.7);
-  ctx.lineTo(-r * capeExtend, sway);
-  ctx.lineTo(-r * 1.0, r * 0.62 + sway * 0.7);
-  ctx.lineTo(-r * 0.15, r * 0.72);
+  ctx.moveTo(-r * 0.55, -r * 0.45);
+  ctx.lineTo(-aimSign * (r * 1.05 + moveRatio * 4), r * 0.52 + flutter * 0.4);
+  ctx.lineTo(-aimSign * r * 0.35, r * 0.65 + flutter * 0.2);
+  ctx.lineTo(r * 0.55, -r * 0.45);
   ctx.closePath();
   ctx.fillStyle = skin.cape;
   ctx.fill();
   ctx.strokeStyle = o;
   ctx.lineWidth = 1.6;
   ctx.stroke();
-  // 망토 팀 컬러 밑단
-  ctx.beginPath();
-  ctx.moveTo(-r * 1.0, -r * 0.62 + sway * 0.7);
-  ctx.lineTo(-r * capeExtend, sway);
-  ctx.lineTo(-r * 1.0, r * 0.62 + sway * 0.7);
-  ctx.strokeStyle = teamColor(f.team);
-  ctx.lineWidth = 1.8;
-  ctx.stroke();
 
-  drawWeapon(ctx, skin, r, "back");
+  // 2. 두 다리 / 부츠 (직립 보행 애니메이션)
+  if (skin.arch !== "ASTRAL") {
+    for (const s of [-1, 1]) {
+      const stepY = stride * s * 3.2;
+      const lx = s * r * 0.28 + stride * s * 1.6;
+      const ly = r * 0.42 + stepY;
+      ctx.beginPath();
+      ctx.roundRect(lx - 3.2, ly - 1, 6.4, 6.2, 2);
+      ctx.fillStyle = "#0F172A";
+      ctx.fill();
+      ctx.strokeStyle = skin.trim;
+      ctx.lineWidth = 1.1;
+      ctx.stroke();
+    }
+  }
 
-  // 동체 (외곽선 강조)
+  // 3. 상체 갑주 / 로브 (역삼각형 영웅 체형)
   ctx.beginPath();
-  ctx.ellipse(0, 0, r * 0.64, r * 0.82, 0, 0, Math.PI * 2);
+  ctx.moveTo(-r * 0.62, -r * 0.52);
+  ctx.lineTo(r * 0.62, -r * 0.52);
+  ctx.lineTo(r * 0.42, r * 0.42);
+  ctx.lineTo(-r * 0.42, r * 0.42);
+  ctx.closePath();
   ctx.fillStyle = skin.body;
   ctx.fill();
   ctx.strokeStyle = o;
   ctx.lineWidth = 2.0;
   ctx.stroke();
 
-  // 가슴 갑주 라인
-  ctx.beginPath();
-  ctx.arc(r * 0.08, 0, r * 0.44, -Math.PI * 0.55, Math.PI * 0.55);
-  ctx.strokeStyle = skin.trim;
-  ctx.lineWidth = 1.1;
-  ctx.stroke();
+  // 허리띠 & 버클
+  ctx.fillStyle = "#0F172A";
+  ctx.fillRect(-r * 0.43, r * 0.14, r * 0.86, 3.6);
+  ctx.fillStyle = skin.trim;
+  ctx.fillRect(-2.5, r * 0.11, 5, 4.2);
 
-  // 견갑 (스윙 반동 연동)
-  const pr = skin.heavy ? r * 0.44 : r * 0.33;
+  // 가슴 코어 엠블럼 (에너지 비율 발광)
+  const coreGlow = 0.55 + clamp((f.energy || 0) / 100, 0, 1) * 0.45;
+  ctx.save();
+  ctx.globalAlpha *= coreGlow;
+  ctx.fillStyle = skin.core;
+  ctx.beginPath();
+  ctx.moveTo(0, -r * 0.36);
+  ctx.lineTo(3.4, -r * 0.14);
+  ctx.lineTo(0, r * 0.06);
+  ctx.lineTo(-3.4, -r * 0.14);
+  ctx.closePath();
+  ctx.fill();
+  ctx.restore();
+
+  // 4. 양쪽 입체 견갑 (Pauldrons)
+  const heavy = skin.arch === "JUGGERNAUT" || skin.arch === "GOLEM" || skin.arch === "PALADIN";
+  const pr = heavy ? r * 0.38 : r * 0.28;
   for (const s of [-1, 1]) {
-    const shShift = s === 1 && swingProg > 0 ? Math.sin(swingProg * Math.PI) * 2.4 : 0;
     ctx.beginPath();
-    ctx.arc(-r * 0.05 + shShift, s * r * 0.72, pr, 0, Math.PI * 2);
+    ctx.ellipse(s * r * 0.62, -r * 0.42, pr, pr * 0.82, s * 0.3, 0, Math.PI * 2);
     ctx.fillStyle = skin.trim;
     ctx.fill();
     ctx.strokeStyle = o;
     ctx.lineWidth = 1.6;
     ctx.stroke();
-    ctx.fillStyle = "rgba(255, 255, 255, 0.5)";
-    ctx.fillRect(-r * 0.05 + shShift - 1, s * r * 0.72 - pr * 0.55, 2, 2);
+    ctx.fillStyle = "rgba(255, 255, 255, 0.35)";
+    ctx.fillRect(s * r * 0.62 - 1.5, -r * 0.48, 3, 1.5);
   }
 
-  // 에너지 코어 (가슴)
-  const coreGlow = 0.45 + clamp(f.energy / 100, 0, 1) * 0.55;
-  ctx.fillStyle = skin.core;
-  ctx.globalAlpha *= coreGlow;
-  ctx.beginPath();
-  ctx.moveTo(-r * 0.28, -3.2);
-  ctx.lineTo(-r * 0.28 + 3.2, 0);
-  ctx.lineTo(-r * 0.28, 3.2);
-  ctx.lineTo(-r * 0.28 - 3.2, 0);
-  ctx.closePath();
-  ctx.fill();
-  ctx.globalAlpha /= coreGlow;
-
-  // 머리 + 바이저
-  ctx.beginPath();
-  ctx.arc(r * 0.16, 0, r * 0.37, 0, Math.PI * 2);
-  ctx.fillStyle = skin.body;
-  ctx.fill();
-  ctx.strokeStyle = o;
-  ctx.lineWidth = 1.6;
-  ctx.stroke();
-  ctx.fillStyle = skin.accent;
-  ctx.fillRect(r * 0.31, -r * 0.19, 3, r * 0.38);
-
-  // 무기 스윙 애니메이션 회전 적용
-  ctx.save();
-  if (swingProg > 0) {
-    const swingAngle =
-      skin.weapon === "BOW" || skin.weapon === "RIFLE"
-        ? -Math.sin(swingProg * Math.PI) * 0.12
-        : Math.sin(swingProg * Math.PI - 0.35) * 0.78;
-    ctx.rotate(swingAngle);
-  }
-  drawWeapon(ctx, skin, r, "front");
-  ctx.restore();
+  // 5. 조준 방향에 따라 먼저/나중에 무기 렌더링
+  if (lookY < 0) drawHeroWeapon(ctx, skin, r, ang, swingProg);
+  drawHeroHead(ctx, skin, r, aimSign, lookY);
+  if (lookY >= 0) drawHeroWeapon(ctx, skin, r, ang, swingProg);
 
   ctx.restore();
 }
@@ -1827,7 +2234,7 @@ function drawFighter(ctx, f) {
     ctx.save();
     ctx.globalAlpha = clamp(0.55 - since * 0.05, 0.28, 0.55);
     ctx.beginPath();
-    ctx.ellipse(f.x, f.y + 2, r * 0.9, r * 0.55, 0, 0, Math.PI * 2);
+    ctx.ellipse(f.x, f.y + 4, r * 0.95, r * 0.52, 0, 0, Math.PI * 2);
     ctx.fillStyle = "#0B0F17";
     ctx.fill();
     ctx.strokeStyle = teamColor(f.team);
@@ -1835,19 +2242,18 @@ function drawFighter(ctx, f) {
     ctx.setLineDash([3, 3]);
     ctx.stroke();
     ctx.setLineDash([]);
-    ctx.strokeStyle = "#64748B";
+    ctx.strokeStyle = "#94A3B8";
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(f.x - 4, f.y - 2);
-    ctx.lineTo(f.x + 4, f.y + 6);
-    ctx.moveTo(f.x + 4, f.y - 2);
-    ctx.lineTo(f.x - 4, f.y + 6);
+    ctx.moveTo(f.x - 4, f.y);
+    ctx.lineTo(f.x + 4, f.y + 7);
+    ctx.moveTo(f.x + 4, f.y);
+    ctx.lineTo(f.x - 4, f.y + 7);
     ctx.stroke();
     ctx.restore();
     return;
   }
 
-  // 시각 히트스톱 지터 + 피격 반동 (게임 좌표는 변경하지 않음)
   let jx = 0;
   let jy = 0;
   if (fv && fv.jitter > 0) {
@@ -1868,7 +2274,6 @@ function drawFighter(ctx, f) {
     team: f.team
   };
 
-  // 대시 잔상
   if (fv) {
     for (const a of fv.afterimages) {
       const t = a.life / a.max;
@@ -1881,96 +2286,88 @@ function drawFighter(ctx, f) {
   ctx.save();
   ctx.globalAlpha = stealthAlpha;
 
-  // 접지 그림자 (Contact Shadow)
+  // 접지 그림자
   ctx.beginPath();
-  ctx.ellipse(view.x + 1.5, view.y + r * 0.72, r * 1.08, r * 0.44, 0, 0, Math.PI * 2);
+  ctx.ellipse(view.x + 1.5, view.y + r * 0.72, r * 1.15, r * 0.45, 0, 0, Math.PI * 2);
   ctx.fillStyle = "rgba(0, 0, 0, 0.58)";
   ctx.fill();
 
-  // 진영 베이스 링 (지면)
+  // 배틀라이트 팀 발밑 타원 링 & 방향 조준 아크
   ctx.beginPath();
-  ctx.ellipse(view.x, view.y + 2, r + 4, (r + 4) * 0.82, 0, 0, Math.PI * 2);
+  ctx.ellipse(view.x, view.y + r * 0.45, r + 3, (r + 3) * 0.52, 0, 0, Math.PI * 2);
   ctx.strokeStyle = teamColor(f.team);
-  ctx.lineWidth = 2;
+  ctx.lineWidth = 1.8;
   ctx.stroke();
   ctx.fillStyle = f.team === "red" ? "rgba(244, 63, 94, 0.10)" : "rgba(56, 189, 248, 0.10)";
   ctx.fill();
 
-  // 방향 셰브론 (베이스 링 바깥)
   const tip = r + 10;
   ctx.beginPath();
-  ctx.moveTo(view.x + Math.cos(visFacing) * tip, view.y + Math.sin(visFacing) * tip);
-  ctx.lineTo(view.x + Math.cos(visFacing - 0.22) * (r + 5), view.y + Math.sin(visFacing - 0.22) * (r + 5));
-  ctx.lineTo(view.x + Math.cos(visFacing + 0.22) * (r + 5), view.y + Math.sin(visFacing + 0.22) * (r + 5));
+  ctx.moveTo(view.x + Math.cos(visFacing) * tip, view.y + r * 0.35 + Math.sin(visFacing) * tip * 0.65);
+  ctx.lineTo(view.x + Math.cos(visFacing - 0.24) * (r + 4), view.y + r * 0.35 + Math.sin(visFacing - 0.24) * (r + 4) * 0.65);
+  ctx.lineTo(view.x + Math.cos(visFacing + 0.24) * (r + 4), view.y + r * 0.35 + Math.sin(visFacing + 0.24) * (r + 4) * 0.65);
   ctx.closePath();
   ctx.fillStyle = teamColor(f.team);
   ctx.fill();
 
-  // 화염 증폭 / 가속 버프 오라
   if (f.atkBuffTimer > 0) {
     ctx.beginPath();
-    ctx.arc(view.x, view.y, r + 5, 0, Math.PI * 2);
+    ctx.arc(view.x, view.y, r + 6, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(249, 115, 22, 0.8)";
     ctx.lineWidth = 1.6;
     ctx.stroke();
   }
   if (f.hasteTimer > 0 || f.leylineBuff) {
     ctx.beginPath();
-    ctx.arc(view.x, view.y, r + 7, VS.clock * 4, VS.clock * 4 + Math.PI * 0.85);
+    ctx.arc(view.x, view.y, r + 8, VS.clock * 4, VS.clock * 4 + Math.PI * 0.85);
     ctx.strokeStyle = "rgba(52, 211, 153, 0.75)";
     ctx.lineWidth = 1.4;
     ctx.stroke();
   }
-
-  // 궁극기 준비 골드 오라
   if (f.energy >= 100) {
     ctx.beginPath();
-    ctx.arc(view.x, view.y, r + 6 + Math.sin(VS.clock * 8) * 1.2, 0, Math.PI * 2);
-    ctx.strokeStyle = "rgba(250, 204, 21, 0.75)";
-    ctx.lineWidth = 1.5;
+    ctx.arc(view.x, view.y, r + 7 + Math.sin(VS.clock * 8) * 1.2, 0, Math.PI * 2);
+    ctx.strokeStyle = "rgba(250, 204, 21, 0.8)";
+    ctx.lineWidth = 1.6;
     ctx.stroke();
   }
-
   ctx.restore();
 
   ctx.save();
   ctx.globalAlpha = stealthAlpha;
   drawChampionBody(ctx, view, skin, r, 1);
 
-  // 보호막 오라
   if (f.shield > 0) {
     ctx.beginPath();
-    ctx.arc(view.x, view.y, r + 3.5, 0, Math.PI * 2);
+    ctx.arc(view.x, view.y - r * 0.25, r + 6, 0, Math.PI * 2);
     ctx.strokeStyle = "rgba(186, 230, 253, 0.72)";
-    ctx.lineWidth = 1.4;
+    ctx.lineWidth = 1.5;
     ctx.stroke();
   }
 
-  // 반격 육각 방패 돔
   if (f.counterTimer > 0) {
-    const hexR = r + 6;
+    const hexR = r + 9;
     ctx.beginPath();
     for (let i = 0; i < 6; i++) {
       const a = VS.clock * 2 + (i * Math.PI) / 3;
       const hx = view.x + Math.cos(a) * hexR;
-      const hy = view.y + Math.sin(a) * hexR;
+      const hy = view.y - r * 0.2 + Math.sin(a) * hexR;
       if (i === 0) ctx.moveTo(hx, hy);
       else ctx.lineTo(hx, hy);
     }
     ctx.closePath();
-    ctx.fillStyle = "rgba(245, 158, 11, 0.14)";
+    ctx.fillStyle = "rgba(245, 158, 11, 0.16)";
     ctx.fill();
     ctx.strokeStyle = PALETTE.crit;
-    ctx.lineWidth = 1.6;
+    ctx.lineWidth = 1.8;
     ctx.stroke();
   }
 
-  // 히트 플래시 (화이트/크림슨 2프레임)
   if (fv && fv.flash > 0) {
     ctx.beginPath();
-    ctx.arc(view.x, view.y, r * 1.05, 0, Math.PI * 2);
+    ctx.arc(view.x, view.y - r * 0.3, r * 1.1, 0, Math.PI * 2);
     ctx.fillStyle = fv.flashColor;
-    ctx.globalAlpha = stealthAlpha * 0.85;
+    ctx.globalAlpha = stealthAlpha * 0.78;
     ctx.fill();
   }
   ctx.restore();
@@ -2055,71 +2452,92 @@ function drawCCIcon(ctx, kind, x, y) {
 function drawWorldHud(ctx, f) {
   if (!f.alive) return;
   const fv = VS.fighters.get(f.unitId);
+  const skin = getSkin(f);
   const champ = getChampionById(f.champId);
-  const W = 32;
+  const W = 38;
   const x = Math.round(f.x - W / 2);
-  const y = Math.round(f.y - f.radius - 17);
+  const topScale = skin.scale || 1.0;
+  const y = Math.round(f.y - f.radius * topScale - 24);
   const hpRatio = clamp(f.hp / f.maxHp, 0, 1);
   const ghostRatio = fv ? clamp(fv.ghostHp / f.maxHp, 0, 1) : hpRatio;
+  // 배틀라이트식 회복 가능 최대 체력(Recovery HP) 표시: 현재 HP + 최대 체력의 12% 한도
+  const recCapRatio = clamp((f.hp + f.maxHp * 0.12) / f.maxHp, hpRatio, 1);
 
   ctx.save();
   ctx.globalAlpha = f.stealthTimer > 0 ? 0.5 : 1;
 
-  // 프레임
-  ctx.fillStyle = PALETTE.outline;
-  ctx.fillRect(x - 1, y - 1, W + 2, 9);
-  ctx.strokeStyle = PALETTE.line;
+  // 챔피언명 (배틀라이트 오버헤드 네임태그)
+  ctx.font = "800 8px 'Pretendard', system-ui, sans-serif";
+  ctx.textAlign = "center";
+  ctx.lineWidth = 2.4;
+  ctx.strokeStyle = "#050811";
+  const label = f.name || champ?.shortName || f.champId;
+  ctx.strokeText(label, f.x, y - 3);
+  ctx.fillStyle = f.team === "blue" ? "#BAE6FD" : "#FECDD3";
+  ctx.fillText(label, f.x, y - 3);
+
+  // 바 외곽 프레임
+  ctx.fillStyle = "#050811";
+  ctx.fillRect(x - 1, y - 1, W + 2, 10);
+  ctx.strokeStyle = "#1E293B";
   ctx.lineWidth = 1;
-  ctx.strokeRect(x - 1.5, y - 1.5, W + 3, 10);
+  ctx.strokeRect(x - 1.5, y - 1.5, W + 3, 11);
 
-  // HP: 잔여 데미지(흰색) → 현재 HP(팀 컬러)
-  ctx.fillStyle = "#E2E8F0";
-  ctx.fillRect(x, y, Math.round(W * ghostRatio), 4);
-  ctx.fillStyle = hpRatio < 0.3 ? PALETTE.crit : teamColor(f.team);
-  ctx.fillRect(x, y, Math.round(W * hpRatio), 4);
-  // 100HP 눈금
-  ctx.fillStyle = "rgba(11, 15, 23, 0.7)";
+  // Recovery HP 음영 (영구 손실 체력은 어둡고, 회복 가능 구간은 은은한 틴트)
+  ctx.fillStyle = "#111827";
+  ctx.fillRect(x, y, W, 5);
+  ctx.fillStyle = f.team === "blue" ? "rgba(56, 189, 248, 0.25)" : "rgba(244, 63, 94, 0.25)";
+  ctx.fillRect(x, y, Math.round(W * recCapRatio), 5);
+
+  // 잔여 데미지(흰색) → 현재 HP
+  ctx.fillStyle = "#F8FAFC";
+  ctx.fillRect(x, y, Math.round(W * ghostRatio), 5);
+  ctx.fillStyle = hpRatio < 0.28 ? PALETTE.crit : f.team === "blue" ? "#22C55E" : "#F43F5E";
+  ctx.fillRect(x, y, Math.round(W * hpRatio), 5);
+
+  // 100HP 단위 구분선
+  ctx.fillStyle = "rgba(5, 8, 17, 0.72)";
   for (let t = 100; t < f.maxHp; t += 100) {
-    ctx.fillRect(x + Math.round((t / f.maxHp) * W), y, 1, 4);
+    ctx.fillRect(x + Math.round((t / f.maxHp) * W), y, 1, 5);
   }
-  // 보호막
+  // 실드 오버레이
   if (f.shield > 0) {
-    ctx.fillStyle = "rgba(248, 250, 252, 0.9)";
-    ctx.fillRect(x, y, Math.round(W * clamp(f.shield / f.maxHp, 0, 1)), 1.5);
+    ctx.fillStyle = "rgba(224, 242, 254, 0.92)";
+    ctx.fillRect(x, y, Math.round(W * clamp(f.shield / f.maxHp, 0, 1)), 2);
   }
 
-  // 에너지 게이지 (4분할)
-  const ey = y + 5;
+  // 4분할 배틀라이트 에너지 게이지
+  const ey = y + 6;
   const segW = (W - 3) / 4;
   for (let s = 0; s < 4; s++) {
     const fill = clamp((f.energy - s * 25) / 25, 0, 1);
     const sx = x + s * (segW + 1);
-    ctx.fillStyle = "#1B2433";
-    ctx.fillRect(sx, ey, segW, 2);
+    ctx.fillStyle = "#162032";
+    ctx.fillRect(sx, ey, segW, 2.2);
     if (fill > 0) {
-      ctx.fillStyle = f.energy >= 100 ? PALETTE.crit : PALETTE.gold;
-      ctx.fillRect(sx, ey, segW * fill, 2);
+      ctx.fillStyle = f.energy >= 100 ? PALETTE.crit : "#F59E0B";
+      ctx.fillRect(sx, ey, segW * fill, 2.2);
     }
   }
 
-  // 반격(Q) 쿨타임 게이지 (우측 세로 바)
+  // 반격(Q) 준비/쿨타임 세로 게이지
   const qMax = (champ?.counterSkill?.cd || 8) * (champ?.patchMod?.cdMult || 1);
   const qFrac = 1 - clamp((f.cds?.counter || 0) / qMax, 0, 1);
-  ctx.fillStyle = PALETTE.outline;
-  ctx.fillRect(x + W + 2, y - 1, 4, 9);
-  ctx.fillStyle = qFrac >= 1 ? PALETTE.blue : "#334155";
-  ctx.fillRect(x + W + 3, y + 7 - Math.round(7 * qFrac), 2, Math.round(7 * qFrac));
+  ctx.fillStyle = "#050811";
+  ctx.fillRect(x + W + 2, y - 1, 4, 10);
+  ctx.fillStyle = qFrac >= 1 ? "#38BDF8" : "#334155";
+  ctx.fillRect(x + W + 3, y + 8 - Math.round(8 * qFrac), 2, Math.round(8 * qFrac));
 
-  // 숙련도 랭크 태그
+  // 숙련도 랭크 배지
   const lv = Number(f.masteryLevel || 1);
   const rank = lv >= 4 ? "S" : lv === 3 ? "A" : lv === 2 ? "B" : "C";
   const rankCol = rank === "S" ? PALETTE.gold : rank === "A" ? PALETTE.crit : rank === "B" ? PALETTE.blue : "#94A3B8";
-  ctx.fillStyle = PALETTE.outline;
-  ctx.fillRect(x - 9, y - 1, 7, 9);
+  ctx.fillStyle = "#050811";
+  ctx.fillRect(x - 9, y - 1, 7.5, 10);
   ctx.fillStyle = rankCol;
   ctx.font = "900 7px ui-monospace, Consolas, monospace";
   ctx.textAlign = "center";
-  ctx.fillText(rank, x - 5.5, y + 6);
+  ctx.fillText(rank, x - 5.2, y + 6.8);
 
   // CC 및 버프 상태 아이콘
   const icons = [];
@@ -2130,7 +2548,7 @@ function drawWorldHud(ctx, f) {
   if (f.hasteTimer > 0 || f.leylineBuff) icons.push("HASTE");
   if (f.atkBuffTimer > 0) icons.push("ATK");
   const startX = f.x - ((icons.length - 1) * 12) / 2;
-  icons.forEach((k, i) => drawCCIcon(ctx, k, startX + i * 12, y - 9));
+  icons.forEach((k, i) => drawCCIcon(ctx, k, startX + i * 12, y - 14));
 
   ctx.restore();
 }
@@ -2395,10 +2813,13 @@ function drawFloatingTexts(ctx, combat) {
  * @returns {CanvasRenderingContext2D}
  */
 export function initRenderer(canvas) {
-  canvas.width = 360;
-  canvas.height = 420;
+  canvas.width = 1040;
+  canvas.height = 840;
   const ctx = canvas.getContext("2d");
-  if (ctx) ctx.imageSmoothingEnabled = false;
+  if (ctx) {
+    ctx.imageSmoothingEnabled = true;
+    ctx.imageSmoothingQuality = "high";
+  }
   return ctx;
 }
 
@@ -2409,29 +2830,34 @@ export function initRenderer(canvas) {
  */
 export function renderArena(ctx, state) {
   const combat = state.combat;
-  const { width, height, centerX, centerY } = combat.arena;
-  const safeRadius = combat.arena.safeRadius ?? 175;
+  const width = combat.arena.width || 520;
+  const height = combat.arena.height || 420;
+  const centerX = combat.arena.centerX || 260;
+  const centerY = combat.arena.centerY || 210;
+  const safeRadius = combat.arena.safeRadius ?? 210;
 
   VS.sync(state);
 
-  // 엔진 쉐이크 + 로컬 감쇠 쉐이크 합성
   const engineShake = combat.shakeTimer > 0 ? Math.min(5, combat.shakeTimer * 30) : 0;
   const shake = Math.max(VS.shake, engineShake);
 
+  ctx.setTransform(2, 0, 0, 2, 0, 0);
   ctx.save();
   ctx.clearRect(0, 0, width, height);
   if (shake > 0.05) {
     ctx.translate(rand(-shake, shake), rand(-shake, shake));
   }
 
-  // 1. 캐싱된 정적 아레나 (맵 테마별 캐시)
-  const bg = VS.getBackground(width, height, centerX, centerY, combat.arena.mapId || "starlight_sanctum");
+  // 1. 캐싱된 정적 아레나 (맵 테마별 2x HiDPI 캐시)
+  const mapId = combat.arena.mapId || "starlight_sanctum";
+  const bg = VS.getBackground(width, height, centerX, centerY, mapId);
   if (bg) {
-    ctx.drawImage(bg, 0, 0);
+    ctx.drawImage(bg, 0, 0, width, height);
   } else {
     ctx.fillStyle = PALETTE.bg;
     ctx.fillRect(0, 0, width, height);
   }
+  drawArenaBraziers(ctx, width, height, mapId);
 
   // 2. 서든데스 해저드
   drawSuddenDeath(ctx, combat, width, height, centerX, centerY, safeRadius);

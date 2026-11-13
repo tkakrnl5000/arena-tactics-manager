@@ -43,60 +43,62 @@ export const MAP_ORDER = ["starlight_sanctum", "magma_forge", "frost_citadel", "
 export const ARENA_MAPS = Object.freeze({
   starlight_sanctum: {
     id: "starlight_sanctum",
-    name: "성운의 성소",
-    subtitle: "Starlight Sanctum",
-    tag: "균형 · 치유 샘 & 가속 성운",
-    desc: "쌍둥이 오벨리스크가 중앙 시야를 가르고, 상하 치유 샘과 중앙 가속 링이 18초 주기로 교전 구도를 바꿉니다.",
-    floorColor: "#0e1525",
-    accentColor: "#38bdf8",
-    ambientColor: "#f59e0b",
+    name: "오르만 사원",
+    subtitle: "Orman Temple",
+    tag: "사원 유적 · 4석주 엄폐 & 치유 오브",
+    desc: "고대 사원의 4개 석조 방벽이 투사체를 차단하고, 상·하 그린 치유 오브와 중앙 가속 성소가 난전을 유도합니다.",
+    floorColor: "#1b1915",
+    accentColor: "#e5b869",
+    ambientColor: "#22c55e",
     pillars: [
-      { id: "p_ss_1", x: 108, y: 210, radius: 17, label: "서쪽 오벨리스크" },
-      { id: "p_ss_2", x: 252, y: 210, radius: 17, label: "동쪽 오벨리스크" }
+      { id: "p_ss_1", x: 178, y: 140, radius: 20, label: "북서 사원 석주" },
+      { id: "p_ss_2", x: 342, y: 140, radius: 20, label: "북동 사원 석주" },
+      { id: "p_ss_3", x: 178, y: 280, radius: 20, label: "남서 사원 석주" },
+      { id: "p_ss_4", x: 342, y: 280, radius: 20, label: "남동 사원 석주" }
     ],
     shrines: [
-      { id: "s_ss_top", x: 180, y: 96, radius: 15, type: "HEAL_SHRINE", label: "성소의 치유 샘", cooldown: 22.0, timer: 4.0 },
-      { id: "s_ss_bot", x: 180, y: 324, radius: 15, type: "HEAL_SHRINE", label: "성소의 치유 샘", cooldown: 22.0, timer: 4.0 }
+      { id: "s_ss_top", x: 260, y: 72, radius: 15, type: "HEAL_SHRINE", label: "그린 체력 오브", cooldown: 20.0, timer: 4.0 },
+      { id: "s_ss_bot", x: 260, y: 348, radius: 15, type: "HEAL_SHRINE", label: "그린 체력 오브", cooldown: 20.0, timer: 4.0 }
     ],
     hazards: [
       {
         id: "h_ss_mid",
-        x: 180,
+        x: 260,
         y: 210,
-        radius: 44,
+        radius: 48,
         type: "LEYLINE_HASTE",
-        label: "성운 가속 링",
-        dormantDur: 10.0,
-        warningDur: 3.0,
+        label: "사원 가속 성소",
+        dormantDur: 9.5,
+        warningDur: 2.8,
         activeDur: 5.0
       }
     ]
   },
   magma_forge: {
     id: "magma_forge",
-    name: "용암 제련소",
-    subtitle: "Magma Crucible",
-    tag: "화력전 · 모루 엄폐 & 간헐천",
-    desc: "4개의 흑요석 모루 사이에서 화염 증폭 제단을 차지하세요. 상하 용암 분출구가 주기적으로 폭발합니다.",
-    floorColor: "#1a1012",
+    name: "블랙스톤 투기장",
+    subtitle: "Blackstone Arena",
+    tag: "검투장 · 현무암 방벽 & 화염 오브",
+    desc: "배틀라이트 전통 콜로세움. 4개의 흑요석 방벽 사이에서 좌우 화염 증폭 오브와 용암 분출구를 장악하세요.",
+    floorColor: "#181316",
     accentColor: "#f97316",
     ambientColor: "#ef4444",
     pillars: [
-      { id: "p_mf_1", x: 116, y: 146, radius: 15, label: "북서 모루" },
-      { id: "p_mf_2", x: 244, y: 146, radius: 15, label: "북동 모루" },
-      { id: "p_mf_3", x: 116, y: 274, radius: 15, label: "남서 모루" },
-      { id: "p_mf_4", x: 244, y: 274, radius: 15, label: "남동 모루" }
+      { id: "p_mf_1", x: 168, y: 148, radius: 19, label: "북서 흑요석 벽" },
+      { id: "p_mf_2", x: 352, y: 148, radius: 19, label: "북동 흑요석 벽" },
+      { id: "p_mf_3", x: 168, y: 272, radius: 19, label: "남서 흑요석 벽" },
+      { id: "p_mf_4", x: 352, y: 272, radius: 19, label: "남동 흑요석 벽" }
     ],
     shrines: [
-      { id: "s_mf_left", x: 76, y: 210, radius: 15, type: "ATK_SHRINE", label: "화염 증폭 제단", cooldown: 24.0, timer: 5.0 },
-      { id: "s_mf_right", x: 284, y: 210, radius: 15, type: "ATK_SHRINE", label: "화염 증폭 제단", cooldown: 24.0, timer: 5.0 }
+      { id: "s_mf_left", x: 116, y: 210, radius: 15, type: "ATK_SHRINE", label: "오렌지 화염 오브", cooldown: 22.0, timer: 5.0 },
+      { id: "s_mf_right", x: 404, y: 210, radius: 15, type: "ATK_SHRINE", label: "오렌지 화염 오브", cooldown: 22.0, timer: 5.0 }
     ],
     hazards: [
       {
         id: "h_mf_top",
-        x: 180,
-        y: 128,
-        radius: 28,
+        x: 260,
+        y: 124,
+        radius: 30,
         type: "LAVA_GEYSER",
         label: "북부 용암 분출구",
         dormantDur: 7.0,
@@ -105,9 +107,9 @@ export const ARENA_MAPS = Object.freeze({
       },
       {
         id: "h_mf_bot",
-        x: 180,
-        y: 292,
-        radius: 28,
+        x: 260,
+        y: 296,
+        radius: 30,
         type: "LAVA_GEYSER",
         label: "남부 용암 분출구",
         dormantDur: 7.0,
@@ -118,41 +120,42 @@ export const ARENA_MAPS = Object.freeze({
   },
   frost_citadel: {
     id: "frost_citadel",
-    name: "영구동토 성채",
-    subtitle: "Frostspire Citadel",
-    tag: "수성전 · 빙결 성물 & 눈보라",
-    desc: "삼각 빙하 모놀리스가 진형을 가릅니다. 빙결 성물은 보호막과 정화를 부여하며, 측면 눈보라 지대는 적을 둔화시킵니다.",
-    floorColor: "#0c1824",
+    name: "아라즈 산맥 성소",
+    subtitle: "Mount Araz",
+    tag: "설산 성소 · 모놀리스 & 수호 오브",
+    desc: "고산 석조 성소의 4개 모놀리스와 서리 결계. 좌우 수호의 오브는 두터운 보호막과 상태 이상 해제를 부여합니다.",
+    floorColor: "#111c28",
     accentColor: "#67e8f9",
     ambientColor: "#38bdf8",
     pillars: [
-      { id: "p_fc_1", x: 180, y: 124, radius: 16, label: "북방 빙하 첨탑" },
-      { id: "p_fc_2", x: 112, y: 266, radius: 16, label: "남서 빙하 첨탑" },
-      { id: "p_fc_3", x: 248, y: 266, radius: 16, label: "남동 빙하 첨탑" }
+      { id: "p_fc_1", x: 194, y: 134, radius: 19, label: "북서 설산 모놀리스" },
+      { id: "p_fc_2", x: 326, y: 134, radius: 19, label: "북동 설산 모놀리스" },
+      { id: "p_fc_3", x: 194, y: 286, radius: 19, label: "남서 설산 모놀리스" },
+      { id: "p_fc_4", x: 326, y: 286, radius: 19, label: "남동 설산 모놀리스" }
     ],
     shrines: [
-      { id: "s_fc_l", x: 96, y: 134, radius: 15, type: "SHIELD_SHRINE", label: "빙결 수호 성물", cooldown: 22.0, timer: 4.5 },
-      { id: "s_fc_r", x: 264, y: 134, radius: 15, type: "SHIELD_SHRINE", label: "빙결 수호 성물", cooldown: 22.0, timer: 4.5 }
+      { id: "s_fc_l", x: 126, y: 134, radius: 15, type: "SHIELD_SHRINE", label: "서리 수호 오브", cooldown: 20.0, timer: 4.5 },
+      { id: "s_fc_r", x: 394, y: 134, radius: 15, type: "SHIELD_SHRINE", label: "서리 수호 오브", cooldown: 20.0, timer: 4.5 }
     ],
     hazards: [
       {
         id: "h_fc_l",
-        x: 112,
-        y: 194,
-        radius: 29,
+        x: 156,
+        y: 210,
+        radius: 31,
         type: "BLIZZARD_SLOW",
-        label: "서부 눈보라 지대",
+        label: "서부 설산 한파",
         dormantDur: 6.5,
         warningDur: 2.5,
         activeDur: 4.5
       },
       {
         id: "h_fc_r",
-        x: 248,
-        y: 194,
-        radius: 29,
+        x: 364,
+        y: 210,
+        radius: 31,
         type: "BLIZZARD_SLOW",
-        label: "동부 눈보라 지대",
+        label: "동부 설산 한파",
         dormantDur: 6.5,
         warningDur: 2.5,
         activeDur: 4.5
@@ -161,31 +164,33 @@ export const ARENA_MAPS = Object.freeze({
   },
   void_nexus: {
     id: "void_nexus",
-    name: "심연의 균열",
-    subtitle: "Void Rift Nexus",
-    tag: "기동전 · 차원 도약문 & 중력장",
-    desc: "대각 차원 도약문으로 적의 후방을 기습하고 심연의 수정으로 궁극기를 채우세요. 중앙 중력 왜곡장이 주기적으로 열립니다.",
-    floorColor: "#120f24",
-    accentColor: "#a855f7",
-    ambientColor: "#10b981",
+    name: "용의 정원",
+    subtitle: "Dragon Garden",
+    tag: "황실 정원 · 옥석주 & 오렌지 에너지 오브",
+    desc: "넓은 동양풍 황실 투기장. 대각 차원 등불 도약과 오렌지 에너지 오브 수급이 끊임없는 기동전을 만듭니다.",
+    floorColor: "#111b1e",
+    accentColor: "#2dd4bf",
+    ambientColor: "#f59e0b",
     pillars: [
-      { id: "p_vn_1", x: 142, y: 162, radius: 16, label: "북서 공허 석주" },
-      { id: "p_vn_2", x: 218, y: 258, radius: 16, label: "남동 공허 석주" }
+      { id: "p_vn_1", x: 186, y: 146, radius: 19, label: "북서 청옥 석주" },
+      { id: "p_vn_2", x: 334, y: 146, radius: 19, label: "북동 청옥 석주" },
+      { id: "p_vn_3", x: 186, y: 274, radius: 19, label: "남서 청옥 석주" },
+      { id: "p_vn_4", x: 334, y: 274, radius: 19, label: "남동 청옥 석주" }
     ],
     shrines: [
-      { id: "s_vn_w1", x: 78, y: 118, radius: 15, type: "WARP_GATE", pairId: "s_vn_w2", label: "북서 차원 도약문", cooldown: 16.0, timer: 3.0 },
-      { id: "s_vn_w2", x: 282, y: 302, radius: 15, type: "WARP_GATE", pairId: "s_vn_w1", label: "남동 차원 도약문", cooldown: 16.0, timer: 3.0 },
-      { id: "s_vn_e1", x: 78, y: 302, radius: 14, type: "ENERGY_SHRINE", label: "심연의 수정", cooldown: 20.0, timer: 5.0 },
-      { id: "s_vn_e2", x: 282, y: 118, radius: 14, type: "ENERGY_SHRINE", label: "심연의 수정", cooldown: 20.0, timer: 5.0 }
+      { id: "s_vn_w1", x: 110, y: 114, radius: 15, type: "WARP_GATE", pairId: "s_vn_w2", label: "북서 차원 등불", cooldown: 16.0, timer: 3.0 },
+      { id: "s_vn_w2", x: 410, y: 306, radius: 15, type: "WARP_GATE", pairId: "s_vn_w1", label: "남동 차원 등불", cooldown: 16.0, timer: 3.0 },
+      { id: "s_vn_e1", x: 110, y: 306, radius: 14, type: "ENERGY_SHRINE", label: "오렌지 에너지 오브", cooldown: 19.0, timer: 5.0 },
+      { id: "s_vn_e2", x: 410, y: 114, radius: 14, type: "ENERGY_SHRINE", label: "오렌지 에너지 오브", cooldown: 19.0, timer: 5.0 }
     ],
     hazards: [
       {
         id: "h_vn_mid",
-        x: 180,
+        x: 260,
         y: 210,
-        radius: 46,
+        radius: 48,
         type: "GRAVITY_PULL",
-        label: "중력 왜곡장",
+        label: "비전 용맥 소용돌이",
         dormantDur: 8.0,
         warningDur: 2.5,
         activeDur: 3.5
@@ -494,6 +499,15 @@ export const CHAMPIONS = {
 };
 
 for (const champ of Object.values(CHAMPIONS)) {
+  if (champ.preferredRange > 80) champ.preferredRange = Math.round(champ.preferredRange * 1.18);
+  champ.m1.range = Math.round(champ.m1.range * (champ.m1.isMelee ? 1.10 : 1.18));
+  if (champ.m1.projSpeed > 0) champ.m1.projSpeed = Math.round(champ.m1.projSpeed * 1.12);
+  champ.m2.range = Math.round(champ.m2.range * 1.18);
+  if (champ.m2.projSpeed > 0) champ.m2.projSpeed = Math.round(champ.m2.projSpeed * 1.12);
+  if (champ.space?.dashDist) champ.space.dashDist = Math.round(champ.space.dashDist * 1.16);
+  if (champ.exSkill?.range) champ.exSkill.range = Math.round(champ.exSkill.range * 1.18);
+  if (champ.exSkill?.projSpeed > 0) champ.exSkill.projSpeed = Math.round(champ.exSkill.projSpeed * 1.12);
+  if (champ.ultSkill?.range) champ.ultSkill.range = Math.round(champ.ultSkill.range * 1.18);
   champ.basicAtk = champ.m1;
   champ.skillPrimary = champ.m2;
 }
@@ -1072,14 +1086,14 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
         mvpUnit: null
       },
       arena: {
-        width: 360,
+        width: 520,
         height: 420,
-        centerX: 180,
+        centerX: 260,
         centerY: 210,
-        safeRadius: 175,
-        minRadius: 55,
+        safeRadius: 210,
+        minRadius: 68,
         mapId: "starlight_sanctum",
-        mapName: "성운의 성소",
+        mapName: "오르만 사원",
         pillars: [],
         shrines: [],
         hazards: []
@@ -1090,7 +1104,7 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
       shakeFrames: 0,
       orb: {
         active: false,
-        x: 180,
+        x: 260,
         y: 210,
         hp: 60,
         maxHp: 60,

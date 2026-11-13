@@ -1528,7 +1528,7 @@ body {
 .arena-wrapper {
   position: relative;
   flex: 1 1 auto;
-  min-height: 190px;
+  min-height: 220px;
   width: 100%;
   background: #060910;
   border: 1px solid var(--border-strong);
@@ -1538,6 +1538,12 @@ body {
   display: flex;
   align-items: center;
   justify-content: center;
+}
+
+@media (min-width: 520px) {
+  #app-shell {
+    max-width: 540px;
+  }
 }
 
 #arena-canvas {

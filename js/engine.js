@@ -179,14 +179,14 @@ export function initCombatRound(state) {
   combat.rngState = ((baseSeed + Math.imul(setNum, 7919)) >>> 0) || 100001;
 
   const blueSpawns = [
-    { x: 68, y: 112 },
-    { x: 52, y: 210 },
-    { x: 68, y: 308 }
+    { x: 74, y: 120 },
+    { x: 58, y: 210 },
+    { x: 74, y: 300 }
   ];
   const redSpawns = [
-    { x: 292, y: 112 },
-    { x: 308, y: 210 },
-    { x: 292, y: 308 }
+    { x: 446, y: 120 },
+    { x: 462, y: 210 },
+    { x: 446, y: 300 }
   ];
 
   const fighters = [];
@@ -219,7 +219,12 @@ export function initCombatRound(state) {
       mvpUnit: null
     };
   }
-  combat.arena.safeRadius = 175;
+  combat.arena.width = 520;
+  combat.arena.height = 420;
+  combat.arena.centerX = 260;
+  combat.arena.centerY = 210;
+  combat.arena.safeRadius = 210;
+  combat.arena.minRadius = 68;
   combat.arena.mapId = mapDef.id;
   combat.arena.mapName = mapDef.name;
   combat.arena.pillars = mapDef.pillars.map((p) => ({ ...p, hitFlash: 0 }));
