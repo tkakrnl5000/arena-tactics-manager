@@ -160,7 +160,7 @@ export class ArenaRenderer {
 
   spawnPopup(x, y, text, color, size, life) {
     this.popups.push({ x, y, text, color, size, life, max: life });
-    if (this.popups.length > 40) this.popups.shift();
+    if (this.popups.length > 5) this.popups.shift();
   }
 
   spawnRing(x, y, r0, r1, color, width, life) {
@@ -378,57 +378,54 @@ export class ArenaRenderer {
       const skin = getSkin(f);
       const dmg = fv.hp - f.hp;
 
-      // (a) 피격 감지: HP 감소 → 히트 플래시 + 반동 + 데미지 팝업 + 파티클
+      // (a) 피격 감지: HP 감소 → 히트 플래시 + 반동 + 초소형 측면 데미지 표기
       if (dmg >= 1 && fv.alive) {
-        fv.recoil = 0.14;
+        fv.recoil = 0.12;
         const crit = dmg >= 95;
-        fv.flash = crit ? 0.06 : 0.04;
+        fv.flash = crit ? 0.05 : 0.035;
         fv.flashColor = crit ? PALETTE.red : "#FFFFFF";
-        fv.ghostHold = 0.32;
-        this.spawnPopup(
-          f.x + rand(-7, 7),
-          f.y - f.radius - 8,
-          crit ? `${Math.round(dmg)}!` : `${Math.round(dmg)}`,
-          crit ? PALETTE.crit : PALETTE.white,
-          crit ? 15 : 11,
-          crit ? 0.9 : 0.65
-        );
-        this.burst(f.x, f.y, crit ? 14 : 6, crit ? [PALETTE.crit, "#FFFFFF", PALETTE.red] : ["#FFFFFF", skin.accent], crit ? 170 : 110, 0.35, crit ? 2.4 : 1.8);
+        fv.ghostHold = 0.28;
+        if (dmg >= 22) {
+          const sideOff = f.team === "blue" ? -15 : 15;
+          this.spawnPopup(
+            f.x + sideOff + rand(-3, 3),
+            f.y - 4,
+            crit ? `${Math.round(dmg)}!` : `${Math.round(dmg)}`,
+            crit ? PALETTE.crit : PALETTE.white,
+            crit ? 7.5 : 6.5,
+            0.40
+          );
+        }
+        this.burst(f.x, f.y, crit ? 6 : 3, crit ? [PALETTE.crit, "#FFFFFF", PALETTE.red] : ["#FFFFFF", skin.accent], crit ? 130 : 85, 0.28, crit ? 2.0 : 1.5);
         if (crit) {
-          fv.jitter = 0.05;
-          this.addShake(3.5);
+          fv.jitter = 0.03;
+          this.addShake(1.2);
         }
       }
       if (f.hp > fv.ghostHp) fv.ghostHp = f.hp;
 
       // (b) 킬 감지
       if (fv.alive && !f.alive) {
-        fv.jitter = 0.06;
+        fv.jitter = 0.04;
         fv.deathTime = this.clock;
-        this.addShake(6);
-        this.burst(f.x, f.y, 24, [teamColor(f.team), PALETTE.crit, "#FFFFFF"], 200, 0.6, 2.6);
-        this.spawnRing(f.x, f.y, 8, 52, PALETTE.crit, 3, 0.45);
+        this.addShake(1.8);
+        this.burst(f.x, f.y, 10, [teamColor(f.team), PALETTE.crit, "#FFFFFF"], 150, 0.45, 2.2);
+        this.spawnRing(f.x, f.y, 8, 42, PALETTE.crit, 2.2, 0.38);
       }
 
       // (c) 궁극기 감지: 에너지 100 → 급감
       if (f.alive && fv.energy >= 99 && f.energy < 20) {
-        fv.jitter = 0.04;
-        this.addShake(4.5);
-        this.spawnRing(f.x, f.y, 10, 80, PALETTE.gold, 3.5, 0.55);
-        this.burst(f.x, f.y, 16, [PALETTE.gold, PALETTE.crit], 160, 0.5, 2.2);
+        fv.jitter = 0.03;
+        this.addShake(1.5);
+        this.spawnRing(f.x, f.y, 10, 65, PALETTE.gold, 2.5, 0.45);
+        this.burst(f.x, f.y, 8, [PALETTE.gold, PALETTE.crit], 130, 0.4, 2.0);
       }
 
-      // (d) 기절 진입
-      if (!fv.stun && f.stunTimer > 0 && f.alive) {
-        this.spawnPopup(f.x, f.y - f.radius - 20, "STUN", PALETTE.crit, 10, 0.7);
-      }
-
-      // (e) 반격(Counter) 성공
+      // (e) 반격(Counter) 성공 (문자 팝업 없이 시인성 링만 표현)
       if ((f.countersTriggered || 0) > fv.counters) {
-        this.spawnPopup(f.x, f.y - f.radius - 22, "COUNTER!", PALETTE.gold, 13, 0.85);
-        this.addShake(3);
-        this.spawnRing(f.x, f.y, 6, 46, PALETTE.blue, 2.5, 0.35);
-        this.burst(f.x, f.y, 12, [PALETTE.gold, PALETTE.blue, "#FFFFFF"], 180, 0.4, 2);
+        this.addShake(1.0);
+        this.spawnRing(f.x, f.y, 6, 36, PALETTE.blue, 2.0, 0.30);
+        this.burst(f.x, f.y, 6, [PALETTE.gold, PALETTE.blue, "#FFFFFF"], 130, 0.32, 1.8);
       }
 
       // (f) 은신 진입 / 그림자 계열 대시 → 스모크
@@ -1403,6 +1400,26 @@ function drawSignatureGround(ctx, combat) {
         ctx.restore();
       }
     }
+  }
+
+  // 팀파이트 매니저 스타일 전술 포커스 마커 (딜러 점사 방침 시 대상 발밑 표식)
+  for (const teamKey of ["blue", "red"]) {
+    if (combat.coachCalls?.[teamKey]?.activeCall !== "EX_RUSH") continue;
+    const focusId = combat.focusTargets?.[teamKey];
+    if (!focusId) continue;
+    const target = combat.fighters.find((u) => u.unitId === focusId && u.alive);
+    if (!target) continue;
+    const pulse = 0.65 + Math.sin(VS.clock * 6) * 0.25;
+    const r = target.radius + 7;
+    ctx.save();
+    ctx.strokeStyle = teamKey === "blue" ? `rgba(56, 189, 248, ${pulse})` : `rgba(251, 113, 133, ${pulse})`;
+    ctx.lineWidth = 1.6;
+    ctx.setLineDash([4, 3]);
+    ctx.beginPath();
+    ctx.arc(target.x, target.y + 4, r, 0, Math.PI * 2);
+    ctx.stroke();
+    ctx.setLineDash([]);
+    ctx.restore();
   }
 }
 
@@ -2539,17 +2556,6 @@ function drawWorldHud(ctx, f) {
   ctx.textAlign = "center";
   ctx.fillText(rank, x - 5.2, y + 6.8);
 
-  // CC 및 버프 상태 아이콘
-  const icons = [];
-  if (f.stunTimer > 0) icons.push("STUN");
-  if (f.slowTimer > 0) icons.push("SLOW");
-  if (f.stealthTimer > 0) icons.push("STEALTH");
-  if (f.counterTimer > 0) icons.push("COUNTER");
-  if (f.hasteTimer > 0 || f.leylineBuff) icons.push("HASTE");
-  if (f.atkBuffTimer > 0) icons.push("ATK");
-  const startX = f.x - ((icons.length - 1) * 12) / 2;
-  icons.forEach((k, i) => drawCCIcon(ctx, k, startX + i * 12, y - 14));
-
   ctx.restore();
 }
 
@@ -2754,15 +2760,16 @@ function drawParticles(ctx) {
 }
 
 function drawOutlinedText(ctx, text, x, y, size, color, scale, alpha) {
+  const clampedSize = Math.min(7.5, Math.max(5.5, size));
   ctx.save();
-  ctx.globalAlpha = alpha;
+  ctx.globalAlpha = alpha * 0.68;
   ctx.translate(x, y);
   ctx.scale(scale, scale);
-  ctx.font = `900 ${size}px "Pretendard", system-ui, sans-serif`;
+  ctx.font = `700 ${clampedSize}px "Pretendard", system-ui, sans-serif`;
   ctx.textAlign = "center";
   ctx.textBaseline = "middle";
   ctx.lineJoin = "round";
-  ctx.lineWidth = 3.5;
+  ctx.lineWidth = 1.6;
   ctx.strokeStyle = PALETTE.outline;
   ctx.strokeText(text, 0, 0);
   ctx.fillStyle = color;
@@ -2771,35 +2778,30 @@ function drawOutlinedText(ctx, text, x, y, size, color, scale, alpha) {
 }
 
 function popScale(p) {
-  // 팝인 오버슈트 이징
-  if (p < 0.12) return 0.55 + (p / 0.12) * 0.75;
-  if (p < 0.25) return 1.3 - ((p - 0.12) / 0.13) * 0.3;
-  return 1;
+  if (p < 0.15) return 0.8 + (p / 0.15) * 0.12;
+  return 0.92;
 }
 
 function drawFloatingTexts(ctx, combat) {
-  // 엔진 제공 텍스트 (회복, 반격, EX/궁극기명, KO, 오브 피해)
+  // 엔진 제공 텍스트 (KO·오브 보상만 초소형 표기)
   for (const ef of combat.effects) {
     if (ef.type !== "FLOAT_TEXT") continue;
     const txt = String(ef.text || "");
     const col = String(ef.color || "").toLowerCase();
-    // 챔피언 피해 숫자는 HP 차분 기반 로컬 팝업으로 대체 (중복 방지)
     if (txt.startsWith("-") && col === "#ffffff") continue;
     const p = clamp(1 - ef.duration / ef.maxDuration, 0, 1);
     let color = ef.color || PALETTE.white;
     if (txt.startsWith("+")) color = PALETTE.heal;
     else if (txt.includes("KO")) color = PALETTE.crit;
-    else if (txt.includes("반격") || txt.includes("★")) color = PALETTE.gold;
-    else if (txt.startsWith("EX")) color = PALETTE.blue;
-    const alpha = p > 0.7 ? 1 - (p - 0.7) / 0.3 : 1;
-    drawOutlinedText(ctx, txt, ef.x, ef.y - p * 18, ef.radius || 11, color, popScale(p), alpha);
+    const alpha = p > 0.65 ? 1 - (p - 0.65) / 0.35 : 1;
+    drawOutlinedText(ctx, txt, ef.x, ef.y - p * 11, ef.radius || 7, color, popScale(p), alpha);
   }
 
-  // 로컬 팝업 (데미지/크리티컬/STUN/COUNTER)
+  // 로컬 팝업 (주요 타격 시 측면 초소형 데미지 수치)
   for (const pp of VS.popups) {
     const p = clamp(1 - pp.life / pp.max, 0, 1);
-    const alpha = p > 0.7 ? 1 - (p - 0.7) / 0.3 : 1;
-    drawOutlinedText(ctx, pp.text, pp.x, pp.y - p * 20, pp.size, pp.color, popScale(p), alpha);
+    const alpha = p > 0.65 ? 1 - (p - 0.65) / 0.35 : 1;
+    drawOutlinedText(ctx, pp.text, pp.x, pp.y - p * 12, pp.size, pp.color, popScale(p), alpha);
   }
 }
 

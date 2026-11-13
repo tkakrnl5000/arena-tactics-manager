@@ -21,18 +21,18 @@ export const ROOM_MODES = Object.freeze({
 });
 
 /**
- * 전체 전투 템포 조절 상수 (체감 약 30~40% 더 신중하고 전술적인 호흡 유지)
+ * 전체 전투 템포 조절 상수 (팀파이트 매니저·배틀라이트식의 차분하고 읽히는 교전 호흡)
  */
 export const TEMPO_CONFIG = Object.freeze({
-  moveSpeedMult: 0.72,
-  projSpeedMult: 0.74,
-  cooldownMult: 1.36,
-  damageMult: 0.82,
-  roundDuration: 85.0,
-  suddenDeathTime: 55.0,
-  vortexShrinkRate: 4.2,
-  orbSpawnInterval: 18.0,
-  coachCallDurationMult: 1.30
+  moveSpeedMult: 0.54,
+  projSpeedMult: 0.56,
+  cooldownMult: 1.75,
+  damageMult: 0.74,
+  roundDuration: 95.0,
+  suddenDeathTime: 65.0,
+  vortexShrinkRate: 3.2,
+  orbSpawnInterval: 20.0,
+  coachCallDurationMult: 1.0
 });
 
 /**
@@ -247,32 +247,35 @@ export const RITE_CARDS = [
 ];
 
 export const COACH_CALLS = Object.freeze({
-  ORB_FOCUS: {
-    id: "ORB_FOCUS",
-    name: "오브 집결",
-    icon: "🔮",
-    desc: "4초간 아군 전원 중앙 오브 최우선 타격 & 이속 +25%",
-    duration: 4.0,
-    cd: 8.0,
-    maxCharges: 3
+  EX_RUSH: {
+    id: "EX_RUSH",
+    name: "딜러 점사",
+    shortDesc: "후열·저체력 집중 포커싱",
+    icon: "🎯",
+    desc: "상대 원거리·마법사·서포터 및 최저 체력 적을 팀 전체가 일제 점사하고 피해 +10%",
+    duration: 99.0,
+    cd: 1.5,
+    maxCharges: 99
   },
   COUNTER_STANCE: {
     id: "COUNTER_STANCE",
-    name: "전원 반격",
+    name: "호위·카이팅",
+    shortDesc: "진형 유지 · 딜러 보호 · 방어",
     icon: "🛡️",
-    desc: "아군 전원 즉시 반격(Q) 자세 발동 & 보호막 +40 부여",
-    duration: 4.0,
-    cd: 10.0,
-    maxCharges: 3
+    desc: "아군 후열 딜러 주변 진형을 유지해 근접 돌진을 막고 카이팅 · 받는 피해 -12%",
+    duration: 99.0,
+    cd: 1.5,
+    maxCharges: 99
   },
-  EX_RUSH: {
-    id: "EX_RUSH",
-    name: "EX 총공세",
-    icon: "⚡",
-    desc: "전원 에너지 +25 즉시 충전 & 4초간 공격력 +20% · EX 난사",
-    duration: 4.0,
-    cd: 10.0,
-    maxCharges: 3
+  ORB_FOCUS: {
+    id: "ORB_FOCUS",
+    name: "거점·오브 장악",
+    shortDesc: "중앙 오브 · 성소 선점",
+    icon: "💠",
+    desc: "중앙 룬 오브와 외곽 치유·에너지 성소 장악 최우선 · 오브 피해 +35%",
+    duration: 99.0,
+    cd: 1.5,
+    maxCharges: 99
   }
 });
 
@@ -499,15 +502,12 @@ export const CHAMPIONS = {
 };
 
 for (const champ of Object.values(CHAMPIONS)) {
-  if (champ.preferredRange > 80) champ.preferredRange = Math.round(champ.preferredRange * 1.18);
-  champ.m1.range = Math.round(champ.m1.range * (champ.m1.isMelee ? 1.10 : 1.18));
-  if (champ.m1.projSpeed > 0) champ.m1.projSpeed = Math.round(champ.m1.projSpeed * 1.12);
-  champ.m2.range = Math.round(champ.m2.range * 1.18);
-  if (champ.m2.projSpeed > 0) champ.m2.projSpeed = Math.round(champ.m2.projSpeed * 1.12);
-  if (champ.space?.dashDist) champ.space.dashDist = Math.round(champ.space.dashDist * 1.16);
-  if (champ.exSkill?.range) champ.exSkill.range = Math.round(champ.exSkill.range * 1.18);
-  if (champ.exSkill?.projSpeed > 0) champ.exSkill.projSpeed = Math.round(champ.exSkill.projSpeed * 1.12);
-  if (champ.ultSkill?.range) champ.ultSkill.range = Math.round(champ.ultSkill.range * 1.18);
+  if (champ.preferredRange > 80) champ.preferredRange = Math.round(champ.preferredRange * 1.15);
+  champ.m1.range = Math.round(champ.m1.range * (champ.m1.isMelee ? 1.08 : 1.14));
+  champ.m2.range = Math.round(champ.m2.range * 1.14);
+  if (champ.space?.dashDist) champ.space.dashDist = Math.round(champ.space.dashDist * 0.95);
+  if (champ.exSkill?.range) champ.exSkill.range = Math.round(champ.exSkill.range * 1.14);
+  if (champ.ultSkill?.range) champ.ultSkill.range = Math.round(champ.ultSkill.range * 1.14);
   champ.basicAtk = champ.m1;
   champ.skillPrimary = champ.m2;
 }
@@ -1118,15 +1118,15 @@ export function createInitialState(roomCode = "", scheduleMode = SCHEDULE_MODES.
       decoys: [],
       coachCalls: {
         blue: {
-          activeCall: null,
-          activeTimer: 0,
-          charges: { ORB_FOCUS: 3, COUNTER_STANCE: 3, EX_RUSH: 3 },
+          activeCall: "ORB_FOCUS",
+          activeTimer: 99.0,
+          charges: { ORB_FOCUS: 99, COUNTER_STANCE: 99, EX_RUSH: 99 },
           cds: { ORB_FOCUS: 0, COUNTER_STANCE: 0, EX_RUSH: 0 }
         },
         red: {
-          activeCall: null,
-          activeTimer: 0,
-          charges: { ORB_FOCUS: 3, COUNTER_STANCE: 3, EX_RUSH: 3 },
+          activeCall: "ORB_FOCUS",
+          activeTimer: 99.0,
+          charges: { ORB_FOCUS: 99, COUNTER_STANCE: 99, EX_RUSH: 99 },
           cds: { ORB_FOCUS: 0, COUNTER_STANCE: 0, EX_RUSH: 0 }
         }
       },

@@ -1690,11 +1690,8 @@ function renderCombatHUD(state) {
   }
 
   const myCalls = combat.coachCalls[myTeamSide];
-  if (myCalls?.activeCall && myCalls.activeTimer > 0) {
-    const def = COACH_CALLS[myCalls.activeCall];
-    dom["call-banner"].textContent = `${def.icon} ${def.name} · ${myCalls.activeTimer.toFixed(1)}s`;
-    dom["call-banner"].classList.remove("hidden");
-  } else {
+  if (dom["call-banner"]) {
+    // 캔버스 상단 시야 가림을 막기 위해 배너는 숨기고 하단 전술 바에서 가동 상태를 표시한다.
     dom["call-banner"].classList.add("hidden");
   }
 
@@ -1762,29 +1759,28 @@ function renderCombatHUD(state) {
   for (const btn of dom["bottom-tactical-bar"].querySelectorAll("[data-call]")) {
     const callKey = btn.dataset.call;
     const def = COACH_CALLS[callKey];
-    const maxCharges = def?.maxCharges || 3;
-    const maxCd = def?.cd || 10;
-    const charges = myCalls?.charges?.[callKey] ?? 0;
+    const maxCd = def?.cd || 1.5;
     const cd = myCalls?.cds?.[callKey] ?? 0;
-    const isActive = myCalls?.activeCall === callKey && myCalls.activeTimer > 0;
+    const isActive = myCalls?.activeCall === callKey;
     btn.classList.toggle("active-call", Boolean(isActive));
-    btn.disabled = !combat.running || charges <= 0 || cd > 0;
+    btn.classList.toggle("is-active", Boolean(isActive));
+    btn.disabled = !combat.running || (!isActive && cd > 0);
 
-    const pipsEl = document.getElementById(`pips-${callKey}`);
-    if (pipsEl) {
-      pipsEl.innerHTML = Array.from({ length: maxCharges }, (_, i) => `<i class="charge-pip ${i < charges ? "on" : ""}"></i>`).join("");
+    const subEl = document.getElementById(`sub-${callKey}`);
+    if (subEl && def?.shortDesc) {
+      subEl.textContent = def.shortDesc;
     }
     const cdMaskEl = document.getElementById(`cd-${callKey}`);
     if (cdMaskEl) {
-      cdMaskEl.style.height = `${cd > 0 ? Math.min(100, (cd / maxCd) * 100) : 0}%`;
+      cdMaskEl.style.height = !isActive && cd > 0 ? `${Math.min(100, (cd / maxCd) * 100)}%` : "0%";
     }
     const metaEl = document.getElementById(`meta-${callKey}`);
     if (metaEl) {
       metaEl.textContent = isActive
-        ? `ACTIVE ${myCalls.activeTimer.toFixed(1)}s`
+        ? "● 전술 가동 중"
         : cd > 0
-          ? `CD ${cd.toFixed(1)}s`
-          : `${charges}/${maxCharges}`;
+          ? `전환 ${cd.toFixed(1)}s`
+          : "전술 전환";
     }
   }
 }

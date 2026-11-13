@@ -1,5 +1,5 @@
 // sw.js — Arena Tactics Manager PWA Service Worker
-const CACHE_NAME = "atm-pwa-v3";
+const CACHE_NAME = "atm-pwa-v5";
 const CORE_ASSETS = [
   "./",
   "./index.html",
