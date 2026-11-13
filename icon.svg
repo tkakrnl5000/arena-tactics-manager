@@ -1,0 +1,52 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" width="512" height="512">
+  <defs>
+    <radialGradient id="bgGrad" cx="50%" cy="42%" r="65%">
+      <stop offset="0%" stop-color="#141e33" />
+      <stop offset="100%" stop-color="#080b12" />
+    </radialGradient>
+    <linearGradient id="shieldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#38bdf8" />
+      <stop offset="50%" stop-color="#1d4ed8" />
+      <stop offset="100%" stop-color="#0f172a" />
+    </linearGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#fde68a" />
+      <stop offset="55%" stop-color="#f59e0b" />
+      <stop offset="100%" stop-color="#b45309" />
+    </linearGradient>
+    <linearGradient id="bladeCyan" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e0f2fe" />
+      <stop offset="50%" stop-color="#38bdf8" />
+      <stop offset="100%" stop-color="#0284c7" />
+    </linearGradient>
+  </defs>
+
+  <!-- Deep Obsidian Base -->
+  <rect width="512" height="512" rx="108" fill="url(#bgGrad)" />
+  <rect x="20" y="20" width="472" height="472" rx="92" fill="none" stroke="#1e293b" stroke-width="4" />
+
+  <!-- Subtle Arcane Hexagon Ring -->
+  <polygon points="256,48 436,152 436,360 256,464 76,360 76,152" fill="none" stroke="#38bdf8" stroke-opacity="0.24" stroke-width="3" />
+  <polygon points="256,74 414,165 414,347 256,438 98,347 98,165" fill="none" stroke="#f59e0b" stroke-opacity="0.22" stroke-width="2" />
+
+  <!-- Crossed Tactical Blades Behind Shield -->
+  <g stroke-linecap="round" stroke-linejoin="round">
+    <path d="M114 398 L368 110 L398 118 L390 148 L136 420 Z" fill="url(#bladeCyan)" stroke="#082f49" stroke-width="4" />
+    <path d="M398 398 L144 110 L114 118 L122 148 L376 420 Z" fill="url(#goldGrad)" stroke="#451a03" stroke-width="4" />
+    <rect x="108" y="362" width="52" height="14" rx="6" transform="rotate(-45 134 369)" fill="#f59e0b" />
+    <rect x="352" y="362" width="52" height="14" rx="6" transform="rotate(45 378 369)" fill="#38bdf8" />
+  </g>
+
+  <!-- Central Cyber-Arcane Shield -->
+  <path d="M256 98 L378 144 L366 286 C356 356 312 402 256 424 C200 402 156 356 146 286 L134 144 Z" fill="#0b1120" stroke="url(#goldGrad)" stroke-width="10" />
+  <path d="M256 118 L358 156 L348 282 C339 342 302 380 256 400 C210 380 173 342 164 282 L154 156 Z" fill="url(#shieldGrad)" fill-opacity="0.32" stroke="#38bdf8" stroke-opacity="0.7" stroke-width="3" />
+
+  <!-- Center Energy Orb Emblem -->
+  <polygon points="256,162 318,226 256,336 194,226" fill="#080b12" stroke="url(#goldGrad)" stroke-width="5" />
+  <circle cx="256" cy="236" r="34" fill="#38bdf8" fill-opacity="0.25" stroke="#38bdf8" stroke-width="4" />
+  <circle cx="256" cy="236" r="16" fill="#fde68a" />
+
+  <!-- Corner Tech Accents -->
+  <circle cx="256" cy="74" r="6" fill="#38bdf8" />
+  <circle cx="256" cy="438" r="6" fill="#f59e0b" />
+</svg>

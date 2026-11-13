@@ -16,7 +16,7 @@ powershell -NoProfile -ExecutionPolicy Bypass -Command ^
   "$listener.Start();" ^
   "Start-Process 'http://localhost:8080/';" ^
   "Write-Host '서버 실행 중: http://localhost:8080/' -ForegroundColor Cyan;" ^
-  "$mimeMap = @{ '.html'='text/html; charset=utf-8'; '.css'='text/css; charset=utf-8'; '.js'='application/javascript; charset=utf-8'; '.svg'='image/svg+xml'; '.json'='application/json; charset=utf-8' };" ^
+  "$mimeMap = @{ '.html'='text/html; charset=utf-8'; '.css'='text/css; charset=utf-8'; '.js'='application/javascript; charset=utf-8'; '.svg'='image/svg+xml'; '.json'='application/json; charset=utf-8'; '.webmanifest'='application/manifest+json; charset=utf-8' };" ^
   "try {" ^
   "  while ($listener.IsListening) {" ^
   "    $ctx = $listener.GetContext();" ^

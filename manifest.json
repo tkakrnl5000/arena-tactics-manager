@@ -1,0 +1,26 @@
+{
+  "name": "아레나 택틱스 매니저",
+  "short_name": "ArenaTactics",
+  "description": "6개 구단 LCK식 리그와 실시간 논타겟 반격 3v3 아레나 e스포츠 매니지먼트",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#080b12",
+  "theme_color": "#080b12",
+  "lang": "ko",
+  "icons": [
+    {
+      "src": "./icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any"
+    },
+    {
+      "src": "./icon.svg",
+      "sizes": "512x512",
+      "type": "image/svg+xml",
+      "purpose": "maskable"
+    }
+  ]
+}

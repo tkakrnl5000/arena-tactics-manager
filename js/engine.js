@@ -5,7 +5,7 @@
  * 중앙 에너지 오브(12s/60HP), EX(25 에너지)/궁극기(100), 서든 데스(35s+), 감독 전술 콜 3종 구현.
  */
 
-import { CHAMPIONS, COACH_CALLS, getChampionById, getRiteById } from "./state.js";
+import { CHAMPIONS, COACH_CALLS, TEMPO_CONFIG, getArenaMapById, getChampionById, getRiteById, nextRandom } from "./state.js";
 
 const LEGACY_CALL_MAP = {
   CALL_ORB_CONTEST: "ORB_FOCUS",
@@ -24,7 +24,7 @@ function dist(x1, y1, x2, y2) {
 function addTicker(state, text, type = "INFO") {
   const logs = state.combat.tickerLogs;
   logs.unshift({
-    id: `${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+    id: `${Math.round((state.combat.elapsed || 0) * 1000)}_${logs.length}`,
     time: state.combat.elapsed.toFixed(1),
     text,
     type
@@ -92,9 +92,20 @@ function getPlayerProfile(state, seatIdx, slotIdx) {
 function buildFighter(state, team, seatIdx, slotIdx, champId, x, y, facing) {
   const champ = getChampionById(champId);
   const player = getPlayerProfile(state, seatIdx, slotIdx);
+  const seat = state.seats?.[seatIdx];
   const mods = getTeamRiteModifiers(state, team);
   const masteryLevel = (player.mastery && player.mastery[champId]) || 1;
   const maxHp = Math.round(champ.baseHp * champ.patchMod.hpMult * mods.maxHpMult);
+
+  const debtMult = (seat?.inDebt || (seat && seat.funds < 0)) ? 0.90 : 1.0;
+  const slumpMult = player.slump ? 0.90 : 1.0;
+  const statPenaltyMult = debtMult * slumpMult;
+  const effStats = {
+    mechanics: Math.max(10, Math.round((player.stats?.mechanics || 75) * statPenaltyMult)),
+    reflex: Math.max(10, Math.round((player.stats?.reflex || 75) * statPenaltyMult)),
+    teamwork: Math.max(10, Math.round((player.stats?.teamwork || 75) * statPenaltyMult)),
+    mental: Math.max(10, Math.round((player.stats?.mental || 75) * statPenaltyMult))
+  };
 
   return {
     unitId: `${team}_${slotIdx}`,
@@ -123,6 +134,9 @@ function buildFighter(state, team, seatIdx, slotIdx, champId, x, y, facing) {
     stealthTimer: 0,
     hasteTimer: 0,
     slowTimer: 0,
+    atkBuffTimer: 0,
+    warpCooldown: 0,
+    leylineBuff: false,
     dashTimer: 0,
     dashVx: 0,
     dashVy: 0,
@@ -136,12 +150,13 @@ function buildFighter(state, team, seatIdx, slotIdx, champId, x, y, facing) {
       primary: 1.2
     },
     emergencyUsed: false,
-    stats: { ...player.stats },
+    stats: effStats,
     trait: player.trait || "clutch_gene",
     masteryLevel,
     damageDealt: 0,
     kills: 0,
     countersTriggered: 0,
+    orbsDestroyed: 0,
     lastHitByUnitId: null
   };
 }
@@ -155,15 +170,23 @@ export function initCombatRound(state) {
   const bluePicks = draft.bluePicks.length === 3 ? draft.bluePicks : ["kylen", "sylvia", "orion"];
   const redPicks = draft.redPicks.length === 3 ? draft.redPicks : ["balrog", "nyx", "lyra"];
 
+  const chosenMapId = state.activeSeries.mapId || state.activeSeries.selectedMapId || (state.preferredMapId && state.preferredMapId !== "AUTO" ? state.preferredMapId : "starlight_sanctum");
+  const mapDef = getArenaMapById(chosenMapId);
+  state.activeSeries.mapId = mapDef.id;
+
+  const baseSeed = Number(state.activeSeries.matchSeed || 100001);
+  const setNum = Number(state.activeSeries.currentSet || 1);
+  combat.rngState = ((baseSeed + Math.imul(setNum, 7919)) >>> 0) || 100001;
+
   const blueSpawns = [
-    { x: 75, y: 120 },
-    { x: 58, y: 210 },
-    { x: 75, y: 300 }
+    { x: 68, y: 112 },
+    { x: 52, y: 210 },
+    { x: 68, y: 308 }
   ];
   const redSpawns = [
-    { x: 285, y: 120 },
-    { x: 302, y: 210 },
-    { x: 285, y: 300 }
+    { x: 292, y: 112 },
+    { x: 308, y: 210 },
+    { x: 292, y: 308 }
   ];
 
   const fighters = [];
@@ -176,13 +199,32 @@ export function initCombatRound(state) {
 
   combat.running = true;
   combat.paused = false;
-  combat.duration = 60.0;
+  combat.duration = TEMPO_CONFIG.roundDuration;
   combat.elapsed = 0.0;
-  combat.timer = 60.0;
+  combat.timer = TEMPO_CONFIG.roundDuration;
   combat.suddenDeath = false;
-  combat.suddenDeathTime = 35.0;
+  combat.suddenDeathTime = TEMPO_CONFIG.suddenDeathTime;
   combat.winnerTeam = null;
+  combat.sfxQueue = [];
+  combat.fastForwarding = false;
+  combat.matchTelemetry = {
+    blue: { orbsDestroyed: 0, countersLanded: 0, totalDamage: 0 },
+    red: { orbsDestroyed: 0, countersLanded: 0, totalDamage: 0 },
+    mvpUnit: null
+  };
+  if (!state.activeSeries.telemetry || Number(state.activeSeries.currentSet || 1) === 1) {
+    state.activeSeries.telemetry = {
+      blue: { orbsDestroyed: 0, countersLanded: 0, totalDamage: 0 },
+      red: { orbsDestroyed: 0, countersLanded: 0, totalDamage: 0 },
+      mvpUnit: null
+    };
+  }
   combat.arena.safeRadius = 175;
+  combat.arena.mapId = mapDef.id;
+  combat.arena.mapName = mapDef.name;
+  combat.arena.pillars = mapDef.pillars.map((p) => ({ ...p, hitFlash: 0 }));
+  combat.arena.shrines = mapDef.shrines.map((s) => ({ ...s, timer: s.timer ?? 4.0, ready: false }));
+  combat.arena.hazards = mapDef.hazards.map((h) => ({ ...h, phase: "DORMANT", phaseTimer: h.dormantDur }));
   combat.hitstopTimer = 0;
   combat.hitstopFrames = 0;
   combat.shakeTimer = 0;
@@ -194,8 +236,8 @@ export function initCombatRound(state) {
     hp: 60,
     maxHp: 60,
     radius: 18,
-    respawnTimer: 12.0,
-    spawnInterval: 12.0
+    respawnTimer: TEMPO_CONFIG.orbSpawnInterval,
+    spawnInterval: TEMPO_CONFIG.orbSpawnInterval
   };
   combat.fighters = fighters;
   combat.projectiles = [];
@@ -216,7 +258,35 @@ export function initCombatRound(state) {
     }
   };
   combat.tickerLogs = [];
-  addTicker(state, "⚔️ 3v3 아레나 전투 개시! 중앙 오브는 12초 후 출현합니다.", "INFO");
+  addTicker(state, `⚔️ [${mapDef.name}] 3v3 전투 개시! 중앙 오브는 ${Math.round(TEMPO_CONFIG.orbSpawnInterval)}초 후 출현합니다.`, "INFO");
+}
+
+function resolvePillarCollision(fighter, arena) {
+  if (!arena.pillars) return;
+  for (const p of arena.pillars) {
+    const dx = fighter.x - p.x;
+    const dy = fighter.y - p.y;
+    const d = Math.hypot(dx, dy);
+    const minDist = fighter.radius + p.radius;
+    if (d < minDist) {
+      const nx = d > 0.001 ? dx / d : 1;
+      const ny = d > 0.001 ? dy / d : 0;
+      fighter.x = clamp(p.x + nx * (minDist + 0.5), fighter.radius + 6, arena.width - fighter.radius - 6);
+      fighter.y = clamp(p.y + ny * (minDist + 0.5), fighter.radius + 6, arena.height - fighter.radius - 6);
+    }
+  }
+}
+
+function applyHazardDamage(state, fighter, amount, sourceLabel) {
+  if (!fighter.alive || amount <= 0) return;
+  fighter.hp = Math.max(0, fighter.hp - amount);
+  if (fighter.hp <= 0) {
+    fighter.alive = false;
+    fighter.state = "DEAD";
+    spawnEffect(state, "NOVA", fighter.x, fighter.y, "#ef4444", 34, 0.45);
+    spawnEffect(state, "FLOAT_TEXT", fighter.x, fighter.y - 16, "#f87171", 13, 0.9, "KO!");
+    addTicker(state, `☠️ ${fighter.name} ${sourceLabel} 피해로 탈락!`, "KO");
+  }
 }
 
 function getAlliedProximityCount(state, fighter, radius = 100) {
@@ -230,13 +300,16 @@ function getAlliedProximityCount(state, fighter, radius = 100) {
 
 function computeDamageMultiplier(state, attacker, target, isOrb = false) {
   const champ = getChampionById(attacker.champId);
-  let mult = champ.patchMod.dmgMult || 1.0;
+  let mult = (champ.patchMod.dmgMult || 1.0) * TEMPO_CONFIG.damageMult;
   mult *= 1 + (attacker.stats.mechanics * 0.003);
   mult *= 1 + ((attacker.masteryLevel - 1) * 0.03);
 
   const activeCall = state.combat.coachCalls[attacker.team].activeCall;
   if (activeCall === "EX_RUSH") {
     mult *= 1.20;
+  }
+  if (attacker.atkBuffTimer > 0) {
+    mult *= 1.25;
   }
 
   if (attacker.trait === "clutch_gene" && (state.combat.suddenDeath || state.activeSeries.currentSet >= 3)) {
@@ -289,6 +362,14 @@ function grantEnergy(state, fighter, amount) {
   fighter.energy = clamp(fighter.energy + Math.round(gain), 0, fighter.maxEnergy);
 }
 
+function pushCombatSfx(state, sfxType) {
+  if (!state?.combat || state.combat.fastForwarding) return;
+  if (!Array.isArray(state.combat.sfxQueue)) state.combat.sfxQueue = [];
+  if (state.combat.sfxQueue.length < 16) {
+    state.combat.sfxQueue.push(sfxType);
+  }
+}
+
 function applyRawDamage(state, target, amount, attacker = null) {
   if (!target.alive || amount <= 0) return 0;
   let remaining = Math.round(amount);
@@ -300,9 +381,18 @@ function applyRawDamage(state, target, amount, attacker = null) {
   }
 
   target.hp = Math.max(0, target.hp - remaining);
+  if (remaining > 0) {
+    pushCombatSfx(state, "HIT_IMPACT");
+  }
   if (attacker) {
     attacker.damageDealt += remaining;
     target.lastHitByUnitId = attacker.unitId;
+    if (state.combat.matchTelemetry?.[attacker.team]) {
+      state.combat.matchTelemetry[attacker.team].totalDamage += remaining;
+    }
+    if (state.activeSeries?.telemetry?.[attacker.team]) {
+      state.activeSeries.telemetry[attacker.team].totalDamage += remaining;
+    }
   }
 
   // Guardian Grace Rite emergency shield
@@ -331,6 +421,13 @@ function handleCounterSuccess(state, defender, attacker, proj = null) {
   const defMods = getTeamRiteModifiers(state, defender.team);
 
   defender.countersTriggered += 1;
+  pushCombatSfx(state, "COUNTER_PARRY");
+  if (state.combat.matchTelemetry?.[defender.team]) {
+    state.combat.matchTelemetry[defender.team].countersLanded += 1;
+  }
+  if (state.activeSeries?.telemetry?.[defender.team]) {
+    state.activeSeries.telemetry[defender.team].countersLanded += 1;
+  }
   defender.counterTimer = 0; // Consumed on successful counter trigger
   defender.cds.m2 = 0;
   defender.cds.primary = 0;
@@ -530,11 +627,21 @@ function hitCenterOrb(state, attacker, dmg) {
   const mult = computeDamageMultiplier(state, attacker, null, true);
   const finalDmg = Math.max(1, Math.round(dmg * mult));
   orb.hp = Math.max(0, orb.hp - finalDmg);
-  spawnEffect(state, "FLOAT_TEXT", orb.x + (Math.random() * 16 - 8), orb.y - 18, "#67e8f9", 11, 0.45, `-${finalDmg}`);
+  spawnEffect(state, "FLOAT_TEXT", orb.x + (nextRandom(state) * 16 - 8), orb.y - 18, "#67e8f9", 11, 0.45, `-${finalDmg}`);
 
   if (orb.hp <= 0) {
     orb.active = false;
     orb.respawnTimer = orb.spawnInterval || 12.0;
+    pushCombatSfx(state, "ORB_SHATTER");
+    if (attacker) {
+      attacker.orbsDestroyed = (attacker.orbsDestroyed || 0) + 1;
+      if (state.combat.matchTelemetry?.[attacker.team]) {
+        state.combat.matchTelemetry[attacker.team].orbsDestroyed += 1;
+      }
+      if (state.activeSeries?.telemetry?.[attacker.team]) {
+        state.activeSeries.telemetry[attacker.team].orbsDestroyed += 1;
+      }
+    }
 
     const mods = getTeamRiteModifiers(state, attacker.team);
     const energyReward = 25 + mods.orbBonusEnergy;
@@ -577,17 +684,17 @@ function handleFighterHit(state, attacker, target, rawDmg, proj = null, extraOpt
 
   grantEnergy(state, attacker, extraOptions.energyGain || 6);
   spawnEffect(state, "HIT_SPARK", target.x, target.y, proj ? proj.color : attacker.color, 18, 0.2);
-  spawnEffect(state, "FLOAT_TEXT", target.x + (Math.random() * 14 - 7), target.y - 16, "#ffffff", 11, 0.5, `-${dealt}`);
+  spawnEffect(state, "FLOAT_TEXT", target.x + (nextRandom(state) * 14 - 7), target.y - 16, "#ffffff", 11, 0.5, `-${dealt}`);
 }
 
 function spawnProjectile(state, owner, opts) {
   const mods = getTeamRiteModifiers(state, owner.team);
-  const speedMult = (mods.projSpeedMult || 1) * (1 + owner.stats.mechanics * 0.002);
+  const speedMult = (mods.projSpeedMult || 1) * (1 + owner.stats.mechanics * 0.002) * TEMPO_CONFIG.projSpeedMult;
   const speed = (opts.speed || 380) * speedMult;
   const angle = opts.angle !== undefined ? opts.angle : owner.facing;
 
   state.combat.projectiles.push({
-    id: `p_${Date.now()}_${Math.random()}`,
+    id: `p_${state.combat.projectiles.length}_${Math.round(nextRandom(state) * 99999)}`,
     ownerId: owner.unitId,
     team: owner.team,
     x: owner.x + Math.cos(angle) * (owner.radius + 4),
@@ -613,7 +720,8 @@ function spawnProjectile(state, owner, opts) {
 function executeM1(state, fighter, target, targetIsOrb) {
   const champ = getChampionById(fighter.champId);
   const m1 = champ.m1;
-  fighter.cds.m1 = m1.cd * champ.patchMod.cdMult;
+  const leyMult = fighter.leylineBuff ? 0.85 : 1.0;
+  fighter.cds.m1 = m1.cd * champ.patchMod.cdMult * TEMPO_CONFIG.cooldownMult * leyMult;
   fighter.cds.basic = fighter.cds.m1;
   fighter.state = "ATTACK";
 
@@ -643,8 +751,9 @@ function executeM2(state, fighter, target, targetIsOrb) {
   const champ = getChampionById(fighter.champId);
   const m2 = champ.m2;
   const mods = getTeamRiteModifiers(state, fighter.team);
+  const leyMult = fighter.leylineBuff ? 0.85 : 1.0;
 
-  fighter.cds.m2 = m2.cd * champ.patchMod.cdMult * mods.skillCdMult;
+  fighter.cds.m2 = m2.cd * champ.patchMod.cdMult * mods.skillCdMult * TEMPO_CONFIG.cooldownMult * leyMult;
   fighter.cds.primary = fighter.cds.m2;
   fighter.state = "SKILL";
 
@@ -687,8 +796,9 @@ function executeSpaceMobility(state, fighter, angle) {
   const champ = getChampionById(fighter.champId);
   const sp = champ.space;
   const mods = getTeamRiteModifiers(state, fighter.team);
+  const leyMult = fighter.leylineBuff ? 0.85 : 1.0;
 
-  fighter.cds.space = sp.cd * champ.patchMod.cdMult * mods.skillCdMult;
+  fighter.cds.space = sp.cd * champ.patchMod.cdMult * mods.skillCdMult * TEMPO_CONFIG.cooldownMult * leyMult;
   fighter.dashTimer = sp.duration || 0.2;
   const speed = (sp.dashDist || 100) / fighter.dashTimer;
   fighter.dashVx = Math.cos(angle) * speed;
@@ -715,7 +825,7 @@ function executeCounterStance(state, fighter) {
   const cSkill = champ.counterSkill;
   const mods = getTeamRiteModifiers(state, fighter.team);
 
-  let cd = cSkill.cd * champ.patchMod.cdMult * mods.skillCdMult;
+  let cd = cSkill.cd * champ.patchMod.cdMult * mods.skillCdMult * TEMPO_CONFIG.cooldownMult;
   if (fighter.trait === "counter_master") cd *= 0.75;
 
   fighter.cds.counter = cd;
@@ -734,6 +844,7 @@ function executeEXSkill(state, fighter, target, targetIsOrb) {
   fighter.energy -= cost;
   fighter.cds.ex = ex.cd || 1.5;
   fighter.state = "EX";
+  pushCombatSfx(state, "EX_SURGE");
 
   spawnEffect(state, "FLOAT_TEXT", fighter.x, fighter.y - 26, "#38bdf8", 13, 0.7, ex.name);
 
@@ -857,6 +968,7 @@ function executeUltimate(state, fighter) {
 
   fighter.energy = 0;
   fighter.state = "ULT";
+  pushCombatSfx(state, "EX_SURGE");
   spawnEffect(state, "NOVA", fighter.x, fighter.y, "#fde047", ult.aoeRadius || 75, 0.55);
   spawnEffect(state, "FLOAT_TEXT", fighter.x, fighter.y - 32, "#fde047", 15, 0.9, `★ ${ult.name}!`);
   addTicker(state, `🔥 ${fighter.name} 궁극기 [${ult.name}] 발동!`, "ULT");
@@ -906,13 +1018,13 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   if (incomingProj) {
     if (fighter.cds.counter <= 0) {
       const triggerChance = 0.04 + fighter.stats.reflex * 0.004;
-      if (Math.random() < triggerChance || fighter.hp / fighter.maxHp < 0.45) {
+      if (nextRandom(state) < triggerChance || fighter.hp / fighter.maxHp < 0.45) {
         executeCounterStance(state, fighter);
         return;
       }
     }
     if (fighter.cds.space <= 0 && (fighter.hp / fighter.maxHp < 0.5 || champ.role === "RANGED" || champ.role === "MAGE")) {
-      const perpAngle = Math.atan2(incomingProj.vy, incomingProj.vx) + (Math.random() < 0.5 ? Math.PI / 2 : -Math.PI / 2);
+      const perpAngle = Math.atan2(incomingProj.vy, incomingProj.vx) + (nextRandom(state) < 0.5 ? Math.PI / 2 : -Math.PI / 2);
       executeSpaceMobility(state, fighter, perpAngle);
       return;
     }
@@ -930,7 +1042,7 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   } else if (orb.active && dist(fighter.x, fighter.y, orb.x, orb.y) < 110 && orb.hp <= 35) {
     target = orb;
     targetIsOrb = true;
-  } else if (enemyDecoys.length > 0 && Math.random() < 0.35) {
+  } else if (enemyDecoys.length > 0 && nextRandom(state) < 0.35) {
     target = enemyDecoys[0];
   } else if (enemies.length > 0) {
     let bestScore = -Infinity;
@@ -992,6 +1104,67 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
     }
   }
 
+  // Avoid Arena Pillars smoothly with tangential slide
+  if (arena.pillars) {
+    for (const p of arena.pillars) {
+      const dp = dist(fighter.x, fighter.y, p.x, p.y);
+      const avoidDist = p.radius + fighter.radius + 22;
+      if (dp > 0 && dp < avoidDist) {
+        const pushStrength = ((avoidDist - dp) / avoidDist) * 1.9;
+        const nx = (fighter.x - p.x) / dp;
+        const ny = (fighter.y - p.y) / dp;
+        moveX += (nx - ny * 0.65 * strafeDir) * pushStrength;
+        moveY += (ny + nx * 0.65 * strafeDir) * pushStrength;
+      }
+    }
+  }
+
+  // Avoid Warning/Active Harmful Hazards, Seek Ready Shrines
+  if (arena.hazards) {
+    for (const h of arena.hazards) {
+      if (h.type === "LEYLINE_HASTE") continue;
+      if (h.phase === "WARNING" || h.phase === "ACTIVE") {
+        const dh = dist(fighter.x, fighter.y, h.x, h.y);
+        if (dh < h.radius + 16) {
+          const awayAng = Math.atan2(fighter.y - h.y, fighter.x - h.x);
+          const urgency = h.phase === "ACTIVE" ? 2.4 : 1.5;
+          moveX += Math.cos(awayAng) * urgency;
+          moveY += Math.sin(awayAng) * urgency;
+        }
+      }
+    }
+  }
+
+  if (arena.shrines) {
+    let bestShrine = null;
+    let bestShrineWeight = 0;
+    const hpRatio = fighter.hp / fighter.maxHp;
+    for (const s of arena.shrines) {
+      if (!s.ready) continue;
+      if (s.type === "WARP_GATE" && fighter.warpCooldown > 0) continue;
+      const ds = dist(fighter.x, fighter.y, s.x, s.y);
+      let desire = 0;
+      if ((s.type === "HEAL_SHRINE" || s.type === "SHIELD_SHRINE") && hpRatio < 0.72 && ds < 195) {
+        desire = (1 - hpRatio) * 1.6;
+      } else if (s.type === "ATK_SHRINE" && fighter.atkBuffTimer <= 0 && ds < 135) {
+        desire = 0.85;
+      } else if (s.type === "ENERGY_SHRINE" && fighter.energy < 85 && ds < 140) {
+        desire = 0.9;
+      } else if (s.type === "WARP_GATE" && hpRatio < 0.45 && ds < 105) {
+        desire = 0.8;
+      }
+      if (desire > bestShrineWeight) {
+        bestShrineWeight = desire;
+        bestShrine = s;
+      }
+    }
+    if (bestShrine) {
+      const shAng = Math.atan2(bestShrine.y - fighter.y, bestShrine.x - fighter.x);
+      moveX += Math.cos(shAng) * bestShrineWeight;
+      moveY += Math.sin(shAng) * bestShrineWeight;
+    }
+  }
+
   // Sudden Death / Arena boundary pull
   const distFromCenter = dist(fighter.x, fighter.y, arena.centerX, arena.centerY);
   if (distFromCenter > arena.safeRadius - 22) {
@@ -1002,13 +1175,14 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
 
   const mag = Math.hypot(moveX, moveY);
   if (mag > 0.01) {
-    let speed = champ.moveSpeed * mods.moveSpeedMult;
-    if (fighter.hasteTimer > 0 || teamCall === "ORB_FOCUS") speed *= 1.25;
+    let speed = champ.moveSpeed * mods.moveSpeedMult * TEMPO_CONFIG.moveSpeedMult;
+    if (fighter.hasteTimer > 0 || fighter.leylineBuff || teamCall === "ORB_FOCUS") speed *= 1.24;
     if (fighter.slowTimer > 0) speed *= 0.65;
     fighter.vx = (moveX / mag) * speed;
     fighter.vy = (moveY / mag) * speed;
     fighter.x = clamp(fighter.x + fighter.vx * dt, fighter.radius + 6, arena.width - fighter.radius - 6);
     fighter.y = clamp(fighter.y + fighter.vy * dt, fighter.radius + 6, arena.height - fighter.radius - 6);
+    resolvePillarCollision(fighter, arena);
     fighter.state = "MOVE";
   }
 
@@ -1019,7 +1193,7 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
 
   const exCost = Math.max(15, (champ.exSkill.cost || 25) - mods.exCostReduction);
   if (fighter.energy >= exCost && fighter.cds.ex <= 0 && dTarget <= champ.exSkill.range) {
-    const shouldCastEx = teamCall === "EX_RUSH" || fighter.energy >= 50 || (champ.role === "SUPPORT" && fighter.hp / fighter.maxHp < 0.7) || Math.random() < 0.35;
+    const shouldCastEx = teamCall === "EX_RUSH" || fighter.energy >= 50 || (champ.role === "SUPPORT" && fighter.hp / fighter.maxHp < 0.7) || nextRandom(state) < 0.35;
     if (shouldCastEx && executeEXSkill(state, fighter, target, targetIsOrb)) {
       return;
     }
@@ -1031,11 +1205,13 @@ export function evaluateUtilityAI(state, fighter, dt = 1 / 60) {
   }
 
   if (fighter.cds.m2 <= 0 && dTarget <= champ.m2.range) {
+    pushCombatSfx(state, "M2_SKILLSHOT");
     executeM2(state, fighter, target, targetIsOrb);
     return;
   }
 
   if (fighter.cds.m1 <= 0 && dTarget <= champ.m1.range + (targetIsOrb ? state.combat.orb.radius : target.radius || 15)) {
+    pushCombatSfx(state, "M1_FIRE");
     executeM1(state, fighter, target, targetIsOrb);
   }
 }
@@ -1059,7 +1235,7 @@ export function triggerCoachCall(state, team, callType) {
   slot.charges[normalized] -= 1;
   slot.cds[normalized] = def.cd * (1 - mods.coachCdReduction);
   slot.activeCall = normalized;
-  slot.activeTimer = def.duration * (1 + avgTeamwork * 0.002);
+  slot.activeTimer = def.duration * (1 + avgTeamwork * 0.002) * TEMPO_CONFIG.coachCallDurationMult;
 
   for (const f of state.combat.fighters) {
     if (!f.alive || f.team !== team) continue;
@@ -1075,6 +1251,7 @@ export function triggerCoachCall(state, team, callType) {
   }
 
   addTicker(state, `${def.icon} [${team.toUpperCase()}] 감독 콜: ${def.name} 발동! (${slot.charges[normalized]}회 남음)`, "CALL");
+  pushCombatSfx(state, "COACH_CALL");
   return true;
 }
 
@@ -1103,8 +1280,24 @@ function updateProjectiles(state, dt) {
     let consumed = false;
     const owner = combat.fighters.find((f) => f.unitId === proj.ownerId) || combat.fighters[0];
 
+    // Check Arena Pillar Obstacles (non-piercing projectiles stop at pillars)
+    if (!proj.pierce && combat.arena.pillars) {
+      for (const pillar of combat.arena.pillars) {
+        if (dist(proj.x, proj.y, pillar.x, pillar.y) <= proj.radius + pillar.radius) {
+          pillar.hitFlash = 0.16;
+          if (proj.isAoE) {
+            triggerAoEImpact(state, proj);
+          } else {
+            spawnEffect(state, "HIT_SPARK", proj.x, proj.y, proj.color, 13, 0.18);
+          }
+          consumed = true;
+          break;
+        }
+      }
+    }
+
     // Check Heal Ally Projectile
-    if (proj.healAlly > 0) {
+    if (!consumed && proj.healAlly > 0) {
       for (const ally of combat.fighters) {
         if (!ally.alive || ally.team !== proj.team || ally.unitId === proj.ownerId) continue;
         if (dist(proj.x, proj.y, ally.x, ally.y) <= proj.radius + ally.radius) {
@@ -1198,6 +1391,105 @@ function triggerAoEImpact(state, proj) {
   }
 }
 
+function getSeatForTeam(state, teamKey) {
+  const series = state.activeSeries || {};
+  const seatIdx = teamKey === "red" ? series.redSeat : series.blueSeat;
+  return state.seats?.[seatIdx] || null;
+}
+
+/**
+ * AI 감독 자동 전술 콜 평가
+ * - 양 팀(blue/red)의 고용 감독 스탯(callSense)과 구단주의 banPickNote(autoCallTrigger)를 반영한다.
+ * - 로컬 구단주가 [긴급 개입](liveOverride: true)을 켠 경우에는 로컬 팀 자동 콜을 일시 중지한다.
+ */
+export function evaluateHeadCoachAutoCalls(state) {
+  const combat = state.combat;
+  if (!combat.running || combat.winnerTeam) return;
+
+  for (const teamKey of ["blue", "red"]) {
+    const slot = combat.coachCalls[teamKey];
+    if (!slot || slot.activeCall) continue;
+
+    const seat = getSeatForTeam(state, teamKey);
+    const series = state.activeSeries || {};
+    const seatIdx = teamKey === "red" ? series.redSeat : series.blueSeat;
+    if (state.roomMode === "ARCADE_2P" && seat && !seat.isAI) continue;
+    const isLocalTeam = seatIdx === state.localSeatIndex && series.seriesMode !== "EXHIBITION";
+    if (isLocalTeam && state.liveOverride) continue;
+
+    const coach = seat?.headCoach;
+    const note = seat?.banPickNote || {};
+    const triggerPref = note.autoCallTrigger || "ORB_SPAWN";
+    const callSense = coach?.stats?.callSense || 75;
+    const senseRate = 0.015 + (callSense / 100) * 0.045;
+
+    const allies = combat.fighters.filter((f) => f.alive && f.team === teamKey);
+    if (allies.length === 0) continue;
+
+    const minHpRatio = allies.reduce((minR, f) => Math.min(minR, f.hp / Math.max(1, f.maxHp)), 1);
+    const maxEnergy = allies.reduce((m, f) => Math.max(m, f.energy || 0), 0);
+    const orbSoon = !combat.orb.active && combat.orb.respawnTimer <= 1.5;
+
+    let incomingDanger = false;
+    for (const proj of combat.projectiles) {
+      if (proj.team === teamKey) continue;
+      for (const ally of allies) {
+        if (dist(ally.x, ally.y, proj.x, proj.y) < 75) {
+          incomingDanger = true;
+          break;
+        }
+      }
+      if (incomingDanger) break;
+    }
+
+    const canUse = (callId) => (slot.charges?.[callId] || 0) > 0 && (slot.cds?.[callId] || 0) <= 0;
+    let chosenCall = null;
+    let reasonLabel = "";
+
+    if (triggerPref === "ORB_SPAWN") {
+      if ((combat.orb.active || orbSoon) && canUse("ORB_FOCUS") && nextRandom(state) < senseRate * 2.2) {
+        chosenCall = "ORB_FOCUS";
+        reasonLabel = "오브 타이밍";
+      } else if ((minHpRatio < 0.45 || incomingDanger) && canUse("COUNTER_STANCE") && nextRandom(state) < senseRate) {
+        chosenCall = "COUNTER_STANCE";
+        reasonLabel = "위기 대응";
+      } else if (combat.elapsed > 14 && maxEnergy >= 30 && canUse("EX_RUSH") && nextRandom(state) < senseRate * 0.8) {
+        chosenCall = "EX_RUSH";
+        reasonLabel = "EX 결전";
+      }
+    } else if (triggerPref === "LOW_HP_DEFENSE") {
+      if ((minHpRatio <= 0.58 || incomingDanger) && canUse("COUNTER_STANCE") && nextRandom(state) < senseRate * 2.4) {
+        chosenCall = "COUNTER_STANCE";
+        reasonLabel = "위기 방어";
+      } else if (combat.orb.active && canUse("ORB_FOCUS") && nextRandom(state) < senseRate * 1.1) {
+        chosenCall = "ORB_FOCUS";
+        reasonLabel = "오브 견제";
+      } else if (maxEnergy >= 40 && canUse("EX_RUSH") && nextRandom(state) < senseRate * 0.7) {
+        chosenCall = "EX_RUSH";
+        reasonLabel = "역습 총공세";
+      }
+    } else {
+      // EARLY_EX_RUSH
+      if (combat.elapsed >= 5 && maxEnergy >= 25 && canUse("EX_RUSH") && nextRandom(state) < senseRate * 2.2) {
+        chosenCall = "EX_RUSH";
+        reasonLabel = "조기 EX 총공세";
+      } else if (combat.orb.active && canUse("ORB_FOCUS") && nextRandom(state) < senseRate * 1.2) {
+        chosenCall = "ORB_FOCUS";
+        reasonLabel = "오브 확보";
+      } else if (minHpRatio < 0.50 && canUse("COUNTER_STANCE") && nextRandom(state) < senseRate) {
+        chosenCall = "COUNTER_STANCE";
+        reasonLabel = "생존 반격";
+      }
+    }
+
+    if (chosenCall && triggerCoachCall(state, teamKey, chosenCall)) {
+      const coachLabel = coach?.name ? coach.name.split(" (")[0] : `${teamKey.toUpperCase()} 감독`;
+      const callDef = COACH_CALLS[chosenCall];
+      addTicker(state, `🎙️ [${coachLabel} 감독 · ${reasonLabel}] ${callDef?.name || chosenCall} 자동 지시!`, "CALL");
+    }
+  }
+}
+
 /**
  * 1프레임(dt) 전투 스텝 진행
  */
@@ -1228,20 +1520,20 @@ export function stepCombat(state, dt) {
   combat.elapsed += dt;
   combat.timer = Math.max(0, combat.duration - combat.elapsed);
 
-  // Sudden Death shrinking arena after 35s
-  if (combat.elapsed >= (combat.suddenDeathTime || 35.0)) {
+  // Sudden Death shrinking arena
+  if (combat.elapsed >= (combat.suddenDeathTime || TEMPO_CONFIG.suddenDeathTime)) {
     if (!combat.suddenDeath) {
       combat.suddenDeath = true;
-      addTicker(state, "🔥 서든 데스 발동! 안전 구역이 급격히 축소됩니다!", "SUDDEN_DEATH");
+      addTicker(state, "🔥 서든 데스 발동! 안전 구역이 서서히 축소됩니다!", "SUDDEN_DEATH");
     }
-    combat.arena.safeRadius = Math.max(combat.arena.minRadius, combat.arena.safeRadius - 6.5 * dt);
+    combat.arena.safeRadius = Math.max(combat.arena.minRadius, combat.arena.safeRadius - TEMPO_CONFIG.vortexShrinkRate * dt);
 
     for (const f of combat.fighters) {
       if (!f.alive) continue;
       const dCenter = dist(f.x, f.y, combat.arena.centerX, combat.arena.centerY);
       if (dCenter > combat.arena.safeRadius) {
         const mods = getTeamRiteModifiers(state, f.team);
-        const burn = 35 * (1 - mods.vortexResist) * dt;
+        const burn = 30 * (1 - mods.vortexResist) * dt;
         f.hp = Math.max(0, f.hp - burn);
         if (f.hp <= 0) {
           f.alive = false;
@@ -1252,7 +1544,125 @@ export function stepCombat(state, dt) {
     }
   }
 
-  // Center Energy Orb spawn every 12s
+  // Update Arena Pillars, Shrines & Hazards
+  if (combat.arena.pillars) {
+    for (const p of combat.arena.pillars) {
+      if (p.hitFlash > 0) p.hitFlash = Math.max(0, p.hitFlash - dt);
+    }
+  }
+
+  if (combat.arena.shrines) {
+    for (const s of combat.arena.shrines) {
+      if (s.timer > 0) {
+        s.timer = Math.max(0, s.timer - dt);
+        s.ready = s.timer <= 0;
+      } else {
+        s.ready = true;
+      }
+
+      if (!s.ready) continue;
+      for (const f of combat.fighters) {
+        if (!f.alive) continue;
+        if (s.type === "WARP_GATE" && f.warpCooldown > 0) continue;
+        if (dist(f.x, f.y, s.x, s.y) <= s.radius + f.radius + 4) {
+          if (s.type === "HEAL_SHRINE") {
+            healFighter(f, 95, state);
+            grantEnergy(state, f, 15);
+            spawnEffect(state, "NOVA", s.x, s.y, "#10b981", 42, 0.45);
+            addTicker(state, `🌿 ${f.name} [${s.label}] 점령! (+95 HP, +15 EN)`, "INFO");
+          } else if (s.type === "ATK_SHRINE") {
+            f.atkBuffTimer = 8.0;
+            f.shield += 45;
+            spawnEffect(state, "NOVA", s.x, s.y, "#f97316", 44, 0.45);
+            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#fb923c", 12, 0.75, "화염 증폭 +25%!");
+            addTicker(state, `🔥 ${f.name} [${s.label}] 점령! (공격력 +25%)`, "INFO");
+          } else if (s.type === "SHIELD_SHRINE") {
+            f.shield += 120;
+            f.slowTimer = 0;
+            f.hasteTimer = Math.max(f.hasteTimer, 4.0);
+            spawnEffect(state, "NOVA", s.x, s.y, "#67e8f9", 44, 0.45);
+            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#67e8f9", 12, 0.75, "수호 성물 +120!");
+            addTicker(state, `❄️ ${f.name} [${s.label}] 점령! (+120 보호막)`, "INFO");
+          } else if (s.type === "ENERGY_SHRINE") {
+            grantEnergy(state, f, 28);
+            healFighter(f, 45, state);
+            spawnEffect(state, "NOVA", s.x, s.y, "#a855f7", 42, 0.45);
+            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#c084fc", 12, 0.75, "+28 EN!");
+            addTicker(state, `🔮 ${f.name} [${s.label}] 흡수! (+28 에너지)`, "INFO");
+          } else if (s.type === "WARP_GATE") {
+            const pair = combat.arena.shrines.find((o) => o.id === s.pairId);
+            spawnEffect(state, "NOVA", s.x, s.y, "#a855f7", 36, 0.4);
+            if (pair) {
+              f.x = pair.x;
+              f.y = pair.y;
+              resolvePillarCollision(f, combat.arena);
+              pair.timer = pair.cooldown;
+              pair.ready = false;
+              spawnEffect(state, "NOVA", pair.x, pair.y, "#10b981", 44, 0.45);
+            }
+            f.hasteTimer = Math.max(f.hasteTimer, 3.0);
+            f.shield += 40;
+            f.warpCooldown = 3.0;
+            spawnEffect(state, "FLOAT_TEXT", f.x, f.y - 24, "#c084fc", 12, 0.75, "차원 도약!");
+            addTicker(state, `🌀 ${f.name} 차원 도약문으로 순간 이동!`, "INFO");
+          }
+          s.timer = s.cooldown;
+          s.ready = false;
+          break;
+        }
+      }
+    }
+  }
+
+  for (const f of combat.fighters) {
+    f.leylineBuff = false;
+  }
+
+  if (combat.arena.hazards) {
+    for (const h of combat.arena.hazards) {
+      h.phaseTimer -= dt;
+      if (h.phaseTimer <= 0) {
+        if (h.phase === "DORMANT") {
+          h.phase = "WARNING";
+          h.phaseTimer = h.warningDur;
+        } else if (h.phase === "WARNING") {
+          h.phase = "ACTIVE";
+          h.phaseTimer = h.activeDur;
+        } else {
+          h.phase = "DORMANT";
+          h.phaseTimer = h.dormantDur;
+        }
+      }
+
+      if (h.phase !== "ACTIVE") continue;
+      for (const f of combat.fighters) {
+        if (!f.alive) continue;
+        const dh = dist(f.x, f.y, h.x, h.y);
+        if (dh <= h.radius + f.radius * 0.35) {
+          if (h.type === "LEYLINE_HASTE") {
+            f.leylineBuff = true;
+            f.hasteTimer = Math.max(f.hasteTimer, 0.25);
+          } else if (h.type === "LAVA_GEYSER") {
+            f.slowTimer = Math.max(f.slowTimer, 0.35);
+            applyHazardDamage(state, f, 32 * dt, "용암 분출");
+          } else if (h.type === "BLIZZARD_SLOW") {
+            f.slowTimer = Math.max(f.slowTimer, 1.2);
+            applyHazardDamage(state, f, 14 * dt, "혹한의 눈보라");
+          } else if (h.type === "GRAVITY_PULL") {
+            const ang = Math.atan2(h.y - f.y, h.x - f.x);
+            if (dh > 8) {
+              f.x = clamp(f.x + Math.cos(ang) * 48 * dt, f.radius + 6, combat.arena.width - f.radius - 6);
+              f.y = clamp(f.y + Math.sin(ang) * 48 * dt, f.radius + 6, combat.arena.height - f.radius - 6);
+              resolvePillarCollision(f, combat.arena);
+            }
+            applyHazardDamage(state, f, 18 * dt, "중력 왜곡장");
+          }
+        }
+      }
+    }
+  }
+
+  // Center Energy Orb spawn
   if (!combat.orb.active) {
     combat.orb.respawnTimer -= dt;
     if (combat.orb.respawnTimer <= 0) {
@@ -1281,14 +1691,8 @@ export function stepCombat(state, dt) {
     }
   }
 
-  // AI Coach Call for Red team
-  if (!combat.coachCalls.red.activeCall) {
-    if (combat.orb.active && combat.coachCalls.red.charges.ORB_FOCUS > 0 && combat.coachCalls.red.cds.ORB_FOCUS <= 0 && Math.random() < 0.02) {
-      triggerCoachCall(state, "red", "ORB_FOCUS");
-    } else if (combat.coachCalls.red.charges.EX_RUSH > 0 && combat.coachCalls.red.cds.EX_RUSH <= 0 && combat.elapsed > 14 && Math.random() < 0.008) {
-      triggerCoachCall(state, "red", "EX_RUSH");
-    }
-  }
+  // AI 감독(양 팀) 자동 전술 콜 평가 (긴급 개입 OFF 시 로컬 팀도 감독이 자동 실행)
+  evaluateHeadCoachAutoCalls(state);
 
   // Update Fighters
   for (const fighter of combat.fighters) {
@@ -1302,6 +1706,8 @@ export function stepCombat(state, dt) {
     if (fighter.stealthTimer > 0) fighter.stealthTimer = Math.max(0, fighter.stealthTimer - dt);
     if (fighter.hasteTimer > 0) fighter.hasteTimer = Math.max(0, fighter.hasteTimer - dt);
     if (fighter.slowTimer > 0) fighter.slowTimer = Math.max(0, fighter.slowTimer - dt);
+    if (fighter.atkBuffTimer > 0) fighter.atkBuffTimer = Math.max(0, fighter.atkBuffTimer - dt);
+    if (fighter.warpCooldown > 0) fighter.warpCooldown = Math.max(0, fighter.warpCooldown - dt);
 
     if (fighter.stunTimer > 0) {
       fighter.state = "STUNNED";
@@ -1312,6 +1718,7 @@ export function stepCombat(state, dt) {
       fighter.dashTimer = Math.max(0, fighter.dashTimer - dt);
       fighter.x = clamp(fighter.x + fighter.dashVx * dt, fighter.radius + 6, combat.arena.width - fighter.radius - 6);
       fighter.y = clamp(fighter.y + fighter.dashVy * dt, fighter.radius + 6, combat.arena.height - fighter.radius - 6);
+      resolvePillarCollision(fighter, combat.arena);
       fighter.state = "DASH";
       continue;
     }
@@ -1327,6 +1734,40 @@ export function stepCombat(state, dt) {
   updateProjectiles(state, dt);
 
   // Check Round End
+  const recordRoundMvp = () => {
+    const fighters = combat.fighters || [];
+    if (fighters.length === 0) return;
+    let best = fighters[0];
+    let bestScore = -1;
+    for (const f of fighters) {
+      const score =
+        (f.damageDealt || 0) +
+        (f.countersTriggered || 0) * 140 +
+        (f.orbsDestroyed || 0) * 120 +
+        (f.kills || 0) * 150;
+      if (score > bestScore) {
+        bestScore = score;
+        best = f;
+      }
+    }
+    const mvpInfo = {
+      unitId: best.unitId,
+      playerName: best.playerName,
+      champName: best.name || best.champId,
+      team: best.team,
+      damageDealt: Math.round(best.damageDealt || 0),
+      countersTriggered: best.countersTriggered || 0,
+      orbsDestroyed: best.orbsDestroyed || 0,
+      kills: best.kills || 0
+    };
+    if (combat.matchTelemetry) {
+      combat.matchTelemetry.mvpUnit = mvpInfo;
+    }
+    if (state.activeSeries?.telemetry) {
+      state.activeSeries.telemetry.mvpUnit = mvpInfo;
+    }
+  };
+
   const blueAlive = combat.fighters.filter((f) => f.alive && f.team === "blue");
   const redAlive = combat.fighters.filter((f) => f.alive && f.team === "red");
 
@@ -1334,6 +1775,7 @@ export function stepCombat(state, dt) {
     const winner = blueAlive.length > 0 ? "blue" : "red";
     combat.running = false;
     combat.winnerTeam = winner;
+    recordRoundMvp();
     addTicker(state, `🏆 ${winner === "blue" ? "BLUE" : "RED"} 팀 라운드 승리!`, "WIN");
     return { roundEnded: true, winnerTeam: winner };
   }
@@ -1344,6 +1786,7 @@ export function stepCombat(state, dt) {
     const winner = blueHp >= redHp ? "blue" : "red";
     combat.running = false;
     combat.winnerTeam = winner;
+    recordRoundMvp();
     addTicker(state, `⏱️ 시간 종료! 잔여 체력 판정으로 ${winner.toUpperCase()} 팀 승리!`, "WIN");
     return { roundEnded: true, winnerTeam: winner };
   }
@@ -1360,6 +1803,7 @@ export function shuffleRandomComp(state) {
     const j = Math.floor(Math.random() * (i + 1));
     [keys[i], keys[j]] = [keys[j], keys[i]];
   }
+  state.activeSeries.matchSeed = Math.floor(100000 + Math.random() * 899999);
   state.activeSeries.draft.bluePicks = keys.slice(0, 3);
   state.activeSeries.draft.redPicks = keys.slice(3, 6);
   initCombatRound(state);
@@ -1376,4 +1820,67 @@ export function setCustomComp(state, bluePicks, redPicks) {
     state.activeSeries.draft.redPicks = [...redPicks];
   }
   initCombatRound(state);
+}
+
+/**
+ * VOD 리플레이에서 다음 킬, 반격 적중, 오브 파괴, 또는 라운드 종료 시점까지 결정론적 시뮬레이션을 빠르게 스킵한다.
+ * @param {object} state
+ * @param {number} [maxTicks]
+ * @returns {{ hit: string | null, ticksAdvanced: number, roundEnded: boolean, winnerTeam: "blue" | "red" | null }}
+ */
+export function fastForwardToNextHighlight(state, maxTicks = 600) {
+  const combat = state?.combat;
+  if (!combat || combat.winnerTeam) {
+    return { hit: null, ticksAdvanced: 0, roundEnded: Boolean(combat?.winnerTeam), winnerTeam: combat?.winnerTeam || null };
+  }
+
+  const prevPaused = combat.paused;
+  combat.running = true;
+  combat.paused = false;
+  combat.fastForwarding = true;
+
+  const baseAlive = combat.fighters.filter((f) => f.alive).length;
+  const sumCounter = () => (combat.matchTelemetry?.blue?.countersLanded || 0) + (combat.matchTelemetry?.red?.countersLanded || 0);
+  const sumOrbs = () => (combat.matchTelemetry?.blue?.orbsDestroyed || 0) + (combat.matchTelemetry?.red?.orbsDestroyed || 0);
+  const baseCounters = sumCounter();
+  const baseOrbs = sumOrbs();
+
+  let hit = null;
+  let ticks = 0;
+  let roundResult = { roundEnded: false, winnerTeam: null };
+
+  try {
+    for (let i = 0; i < maxTicks; i++) {
+      roundResult = stepCombat(state, 1 / 60);
+      ticks += 1;
+
+      if (roundResult.roundEnded) {
+        hit = "ROUND_END";
+        break;
+      }
+      if (combat.fighters.filter((f) => f.alive).length < baseAlive) {
+        hit = "KILL";
+        break;
+      }
+      if (sumOrbs() > baseOrbs) {
+        hit = "ORB";
+        break;
+      }
+      if (sumCounter() > baseCounters) {
+        hit = "COUNTER";
+        break;
+      }
+    }
+  } finally {
+    combat.fastForwarding = false;
+    combat.sfxQueue = [];
+    combat.paused = prevPaused && !roundResult.roundEnded;
+  }
+
+  return {
+    hit,
+    ticksAdvanced: ticks,
+    roundEnded: roundResult.roundEnded,
+    winnerTeam: roundResult.winnerTeam
+  };
 }

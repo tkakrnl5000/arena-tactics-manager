@@ -25,13 +25,18 @@
 | `js/controller.js` | Main `requestAnimationFrame` loop, screen state machine, user action dispatch, DOM event listeners. | Must delegate rendering to `renderer.js` and `hud.js`. |
 | `js/renderer.js` | Pure HTML5 Canvas 2D rendering (arena floor, safe zone, tokens, facing arrows, projectiles, counter aura, hitstop, shake). | **Zero game-state mutations.** |
 | `js/hud.js` | Pure DOM rendering for screens, league table, draft grid, rite cards, coach buttons, modals. | **Zero physics/combat math.** |
+| `js/audio.js` | Zero-asset Web Audio API procedural SFX synthesizer & mute persistence. | No direct DOM manipulation or game-state mutations. |
+| `manifest.json` / `sw.js` / `icon.svg` | PWA standalone portrait packaging, core asset precache, Neon `/sql` network bypass. | No hardcoded secrets or game logic. |
 
 ---
 
 ## 3. Complete State Schemas (`js/state.js`)
 
-### 3.1 Screen State Enum (`SCREEN_STATES`)
-`"LOBBY" | "WEEKLY_HUB" | "DRAFT" | "COMBAT" | "RITE_DRAFT" | "PLAYOFF_BRACKET"`
+### 3.1 Screen State Enum (`SCREEN_STATES`) & Room Modes (`ROOM_MODES`)
+- `SCREEN_STATES`: `"LOBBY" | "ARCADE_LOBBY" | "WEEKLY_HUB" | "DRAFT" | "COMBAT" | "RITE_DRAFT" | "PLAYOFF_BRACKET" | "STOVE_LEAGUE"`
+- `ROOM_MODES`: `"ARCADE_2P" | "LEAGUE_6P"` (2인 아케이드 라이브 Bo3 vs 3~6인 데일리 경영 리그)
+- `activeMatch` (for `ARCADE_2P`): `{ callEvents: [], ritePicks: { blue: string | null, red: string | null }, boxscore: object | null, rematchCount: number, setHistory: object[] }`
+- `DRAFT` phases: `BAN_BLUE -> BAN_RED -> PICK_BLUE_1 -> ... -> PICK_RED_3 -> PLAYER_ASSIGN (ARCADE_2P) -> COMPLETE`
 
 ### 3.2 Champion Pool Schema (`CHAMPIONS` — 12 Champions)
 Each entry in `CHAMPIONS` (keyed and ordered by `id`):
@@ -232,6 +237,77 @@ Each entry in `CHAMPIONS` (keyed and ordered by `id`):
 }
 ```
 
+### 3.7 AI Head Coach Schema (`HEAD_COACHES` — 8 Coaches, Patch 1)
+Each of the 6 clubs employs 1 AI Head Coach. The human player is Club Owner / GM and hires coaches from the 8-coach market:
+```json
+{
+  "id": "coach_koma",
+  "name": "코마 (Koma)",
+  "title": "황금 왕조 설계자",
+  "philosophy": "ORB_MASTER",
+  "signatureChamp": "orion",
+  "salary": 400,
+  "bark": "오리온은 내 전략의 심장입니다. 구단주님, 믿고 맡겨주십시오!",
+  "stats": { "draftInsight": 88, "callSense": 92, "riteSense": 86, "ego": 22 }
+}
+```
+- **Philosophies (`philosophy`)**: `"DATA_ANALYST" | "JOKER_GAMBLER" | "ORB_MASTER" | "ROOKIE_MENTOR"`
+- **Stats (`1..100`)**:
+  - `draftInsight`: Accuracy in snipe-banning enemy mastery picks & drafting counter compositions.
+  - `callSense`: Reaction accuracy & timing for automatic in-combat Coach Tactical Calls.
+  - `riteSense`: Synergy optimization accuracy when picking between-set Rite cards.
+  - `ego` (`0..100`): Probability of ignoring the GM's Ban/Pick Note directive during draft to force their `signatureChamp` with a live chat bark in `activeSeries.coachLogs`.
+
+### 3.8 GM Pre-Match Ban/Pick Note Schema (`seat.banPickNote`, Patch 1)
+```json
+{
+  "mustBans": ["nyx", "frost"],
+  "priorityPicks": ["kylen", "sylvia"],
+  "counterStrategy": "AUTO_COUNTER",
+  "ritePreference": "COUNTER",
+  "autoCallTrigger": "ORB_SPAWN"
+}
+```
+- `counterStrategy`: `"AUTO_COUNTER" | "DIVE_COMP" | "POKE_CONTROL" | "PROTECT_CARRY"`
+- `ritePreference`: `"COUNTER" | "ORB" | "ENERGY" | "SURVIVAL"`
+- `autoCallTrigger`: `"ORB_SPAWN" | "LOW_HP_DEFENSE" | "EARLY_EX_RUSH"`
+- **Live Override (`state.liveOverride`)**: Even while the AI Head Coach automates Draft, Rite Cards, and Tactical Calls, the GM can toggle `[긴급 개입]` (`liveOverride: true`) at any moment or tap bottom tactical call buttons directly.
+
+### 3.9 League Schedule Modes & Seeded VOD Replay (Patch 1)
+- **`SCHEDULE_MODES`**:
+  - `"REALTIME_DAILY"` (Default): 1 round/day at `21:00:00` local time (Mon–Fri Regular Rounds 1–5, Sat Semi-Finals Bo5, Sun Finals Bo5) with live `HH:MM:SS` Hub countdown.
+  - `"HOURLY_BLITZ"`: 1 round every 1 hour on the hour.
+  - `"INSTANT_TEST"`: Unlocks immediate `[테스트: 다음 경기 즉시 개막]` execution without waiting for clock timestamps.
+- **Deterministic Seed & Offline VOD Replay**:
+  - Every scheduled match and playoff match carries `matchSeed: number` and `scheduledAt: number` (epoch ms).
+  - `js/engine.js` uses Mulberry32 seeded PRNG stored in `combat.rngState` via `nextRandom(state)` so offline elapsed matches produce identical deterministic outcomes and can be replayed via `vodPayloads[matchId]` at `1x / 2x / 4x` speed.
+
+### 3.10 24-Hour Automated Training Routine & Club Facilities (`seat.autoSchedule`, `seat.facilities`, Patch 2)
+- **`autoSchedule`**: Persistent 3-slot daily cycle (`MORNING`, `AFTERNOON`, `NIGHT`) + `focusStat` (`"mechanics" | "reflex" | "teamwork" | "mental"`) + `lastTickAt` (epoch ms).
+  - Activities (`ROUTINE_ACTIVITIES`):
+    - `"SOLO_GRIND"`: Target focus stat `+2` (scaled by `Training Center`), Condition `-8%`.
+    - `"TEAM_SCRIM"`: Active champions mastery XP `+25` (scaled by `Analytics Lab`, `+1` level per `100 XP`), Condition `-10%`.
+    - `"STREAMING"`: Club funds `+150G`, Condition `-5%`.
+    - `"REST_CARE"`: All players Condition `+18%` (scaled by `Medical Bay`) & clears `slump` (`유리멘탈`) debuff.
+- **`facilities`** (`Lv.1..Lv.5`):
+  - `trainingCenter`: `+15%` stat gain per level.
+  - `analyticsLab`: `+15%` mastery XP & `+5%` coach `draftInsight` bonus per level.
+  - `medicalBay`: `+15%` condition recovery per level.
+
+### 3.11 Club Finances, Sponsor Contracts & Debt Penalty (`seat.sponsorContract`, Patch 2)
+- Starting `funds`: `3000G`.
+- `roundPayroll`: Sum of 4 player salaries + Head Coach round salary.
+- **`SPONSOR_CONTRACTS` (3 Contracts)**:
+  - `sponsor_orb_hunter`: `>= 3` Center Orbs destroyed per match -> `+350G`.
+  - `sponsor_iron_shield`: `>= 4` Counters landed per match -> `+300G`.
+  - `sponsor_victory_roar`: Match win -> `+400G`.
+- **Settlement & Debt**: Every completed round settles `Match Prize (+500G win / +150G loss) + Sponsor Bonus - roundPayroll`. Dropping below `0G` flags `seat.inDebt = true` (`임금 체불 위기`, `-10%` player stat penalty in combat and locks new signings/upgrades until `funds >= 0`).
+
+### 3.12 Match Telemetry, Arena Daily News & Multi-Season Stove League (`matchTelemetry`, `dailyNews`, `hallOfFame`, Patch 2)
+- **`combat.matchTelemetry` / `activeSeries.telemetry`**: Tracks per-team `orbsDestroyed`, `countersLanded`, `totalDamage`, and `mvpUnit` without modifying core combat math.
+- **`dailyNews`**: Generated after every resolved round (`headline`, `matchOfTheDay`, `mvpReport`, `coachDrama`, `myClubReport`).
+- **`hallOfFame` & `STOVE_LEAGUE`**: Upon Bo5 Finals completion, records `{ season, championTeam, championAbbr, coachName, mvpName, mvpStats }`, distributes prize payouts (`1st: 3000G`, `2nd: 1500G`, `3rd-4th: 800G`), generates 3 Super Rookies (`stoveRookies`), and allows kicking off `seasonNumber + 1` with `+3` AI baseline stat scaling.
+
 ---
 
 ## 4. Exact Exported Module Function Signatures
@@ -242,51 +318,85 @@ Each entry in `CHAMPIONS` (keyed and ordered by `id`):
 - `export const RITE_CARDS: RiteCardDef[]`
 - `export const TRAITS: Record<string, TraitDef>`
 - `export const COACH_CALLS: Record<string, CoachCallDef>`
-- `export function createInitialState(roomCode?: string): GameState`
+- `export const HEAD_COACHES: HeadCoachDef[]`
+- `export const SCHEDULE_MODES: Readonly<Record<string, string>>`
+- `export const BAN_PICK_STRATEGIES: Readonly<Record<string, { id: string, name: string, desc: string }>>`
+- `export const RITE_PREFERENCES: Readonly<Record<string, { id: string, name: string, desc: string }>>`
+- `export const AUTO_CALL_TRIGGERS: Readonly<Record<string, { id: string, name: string, desc: string }>>`
+- `export const ROUTINE_ACTIVITIES: Readonly<Record<string, object>>`
+- `export const FACILITY_DEFS: Readonly<Record<string, object>>`
+- `export const SPONSOR_CONTRACTS: SponsorContractDef[]`
+- `export function createInitialState(roomCode?: string, scheduleMode?: string, roomMode?: string): GameState`
 - `export function cloneState(state: GameState): GameState`
 - `export function getChampionById(champId: string): ChampionDef`
 - `export function getRiteById(riteId: string): RiteCardDef`
+- `export function getHeadCoachById(coachId: string): HeadCoachDef`
+- `export function getSponsorById(sponsorId: string): SponsorContractDef`
+- `export function computeRoundPayroll(seat: SeatState): number`
+- `export function createDefaultBanPickNote(seatIdx?: number): BanPickNote`
+- `export function hashSeed(str: string): number`
+- `export function createSeededRng(seed: number): () => number`
+- `export function nextRandom(state: GameState): number`
+- `export function computeRoundScheduledAt(baseTimeMs: number, roundIndex: number, scheduleMode: string): number`
 
 ### 4.2 `js/engine.js`
 - `export function initCombatRound(state: GameState): void`
-  - Spawns 3v3 fighters from `activeSeries.draft.bluePicks` and `redPicks`, applies player stats, mastery, traits, balance patch modifiers, and active Rite Cards.
 - `export function stepCombat(state: GameState, dt: number): { roundEnded: boolean, winnerTeam: "blue" | "red" | null }`
-  - Advances 1 tick (`dt = 1/60`): processes `hitstopFrames`, updates timers, shrinks `safeRadius` in Sudden Death (`timer <= 15s` or overtime), spawns/updates Center Energy Orb, runs Utility AI for each living fighter, updates projectiles & collisions, intercepts hits on `counterTimer > 0` (triggers `hitstopFrames = 8`, stuns attacker for `1.2s`, grants `+20` energy), triggers EX (`>= 50` energy) & Ultimate (`100` energy), and checks round wipe.
-- `export function triggerCoachCall(state: GameState, team: "blue" | "red", callType: "CALL_FOCUS" | "CALL_ORB_CONTEST" | "CALL_BAIT_COUNTER"): boolean`
-  - Activates the tactical call for `team` if off cooldown, logs to `combat.tickerLogs`, and applies immediate tactical behavior/buffs.
+- `export function evaluateHeadCoachAutoCalls(state: GameState): void`
+- `export function triggerCoachCall(state: GameState, team: "blue" | "red", callType: "ORB_FOCUS" | "COUNTER_STANCE" | "EX_RUSH"): boolean`
 - `export function evaluateUtilityAI(state: GameState, fighter: Fighter): void`
-  - Scores actions (Attack Nearest, Snipe Low HP, Contest Center Orb, Activate Counter on Incoming Projectile, Cast EX/Ult, Evade Vortex) weighted by `stats`, `trait`, and active `coachCalls`.
 
 ### 4.3 `js/league.js`
-- `export function generateSchedule(seatCount?: number): WeekSchedule[]`
-  - Generates a 5-week 6-team round-robin schedule (3 Bo3 matches per week).
-- `export function executeWeeklyAction(state: GameState, seatIndex: number, actionType: "TRAIN" | "SCRIM" | "SCOUT_FA", payload?: { playerIndex?: number, statKey?: string, faIndex?: number }): { ok: boolean, message: string }`
-  - Consumes `1 AP`, updates player stats/condition/roster, and logs result.
+- `export function generateSchedule(seatCount?: number, baseTimeMs?: number, scheduleMode?: string): WeekSchedule[]`
+- `export function executeWeeklyAction(state: GameState, seatIndex: number, actionType: string, payload?: object): { ok: boolean, message: string }`
+- `export function updateAutoSchedule(state: GameState, seatIndex: number, patch: object): AutoSchedule`
+- `export function upgradeFacility(state: GameState, seatIndex: number, facilityKey: string): { ok: boolean, message: string }`
+- `export function selectSponsorContract(state: GameState, seatIndex: number, sponsorId: string): { ok: boolean, message: string }`
+- `export function tickRealTimeRoutineIfDue(state: GameState, nowMs?: number): number`
+- `export function signStoveRookie(state: GameState, seatIndex: number, rookieIndex: number): { ok: boolean, message: string }`
+- `export function startNextSeason(state: GameState): void`
+- `export function hireHeadCoach(state: GameState, seatIndex: number, coachId: string): { ok: boolean, message: string }`
+- `export function updateBanPickNote(state: GameState, seatIndex: number, patch: Partial<BanPickNote>): BanPickNote`
+- `export function setScheduleMode(state: GameState, scheduleMode: string, baseTimeMs?: number): void`
+- `export function getNextMatchCountdown(state: GameState, nowMs?: number): object`
+- `export function checkAndResolveDueMatches(state: GameState, nowMs?: number): number`
+- `export function startVodReplay(state: GameState, matchId: string, setIndex?: number): boolean`
 - `export function startPlayerMatchOrSimWeek(state: GameState): void`
-  - Simulates AI-vs-AI matches for the current week and transitions human match into `DRAFT`.
-- `export function simulateMatchHeadless(state: GameState, homeSeat: number, awaySeat: number, bestOf: number): { homeSets: number, awaySets: number, winnerSeat: number }`
-  - Fast deterministic/statistical match simulator using team roster power, condition, mastery, and traits.
+- `export function simulateMatchHeadless(state: GameState, homeSeat: number, awaySeat: number, bestOf: number, matchSeed?: number): { homeSets: number, awaySets: number, winnerSeat: number, vodSets: object[], telemetry: object }`
 - `export function advanceDraftStep(state: GameState, champId: string): void`
-  - Progresses snake draft (`BAN_BLUE -> BAN_RED -> PICK_BLUE_1 -> PICK_RED_1 -> PICK_RED_2 -> PICK_BLUE_2 -> PICK_BLUE_3 -> PICK_RED_3`), auto-picking for AI seats.
+- `export function runCoachDraftStep(state: GameState): boolean`
 - `export function offerRiteCards(state: GameState): void`
-  - Populates `activeSeries.riteOptions` with 3 non-duplicate Rite Cards between sets.
 - `export function selectRiteCard(state: GameState, team: "blue" | "red", riteId: string): void`
-  - Adds selected Rite Card to `blueRites`/`redRites` (and auto-picks for AI opponent), then starts the next set's `COMBAT`.
+- `export function autoSelectCoachRiteCard(state: GameState, team: "blue" | "red"): string | null`
 - `export function completeSeriesAndAdvance(state: GameState): void`
-  - Records match winner, checks if regular season week is complete, triggers balance patches on even weeks, or advances Top-4 Bo5 Playoff bracket.
 - `export function getStandings(state: GameState): SeatState[]`
-  - Returns seats sorted by `wins DESC`, `(setWins - setLosses) DESC`, `setWins DESC`.
 - `export function applyBalancePatch(state: GameState): PatchNote[]`
-  - Buffs 2 underused champions and nerfs 2 dominant champions by `±8%..12%`, incrementing `patchVersion`.
 
 ### 4.4 `js/network.js`
+- `export const DEFAULT_NEON_URI: string`
+- `export function getSessionPlayerId(): string`
 - `export function configureNeon(connectionUrlOrEndpoint: string): boolean`
+- `export function ensureNeonSchema(): Promise<boolean>`
+- `export function testNeonConnection(connectionUrlOrEndpoint?: string): Promise<{ ok: boolean, message: string, mode: "NEON" | "LOCAL" }>`
+- `export function restoreSessionIfPossible(state: GameState): Promise<GameState>`
 - `export function createRoom(state: GameState): Promise<{ roomCode: string, mode: "NEON" | "LOCAL" }>`
 - `export function joinRoom(roomCode: string, preferredSeatIndex?: number, coachName?: string): Promise<{ ok: boolean, state: GameState | null, assignedSeat: number, mode: "NEON" | "LOCAL", error?: string }>`
 - `export function claimSeat(state: GameState, seatIndex: number, coachName: string): Promise<GameState>`
-  - Converts `seats[seatIndex].isAI = false`, updates `coachName`, persists to Neon + `BroadcastChannel` + `localStorage`.
+  - Converts `seats[seatIndex].isAI = false`, records `sessionPlayerId`, updates `coachName`, persists to Neon + `BroadcastChannel` + `localStorage`.
 - `export function syncRoomState(state: GameState): Promise<boolean>`
 - `export function subscribeRoomUpdates(roomCode: string, onRemoteUpdate: (newState: GameState) => void): () => void`
+  - Uses fast 1500ms polling when `roomMode === "ARCADE_2P"` and 4000ms polling when `roomMode === "LEAGUE_6P"` + instant `BroadcastChannel` / `storage` events in Local mode.
+
+### 4.4.1 `js/audio.js`
+- `export function initAudio(): void`
+- `export function isAudioMuted(): boolean`
+- `export function setAudioMuted(muted: boolean): boolean`
+- `export function toggleAudioMute(): boolean`
+- `export function playSfx(type: "M1_FIRE" | "M2_SKILLSHOT" | "HIT_IMPACT" | "COUNTER_PARRY" | "ORB_SHATTER" | "EX_SURGE" | "COACH_CALL" | "CARD_CLICK" | "VICTORY_FANFARE"): void`
+
+### 4.4.2 VOD Replay & `js/engine.js` Extensions
+- `export function fastForwardToNextHighlight(state: GameState, maxTicks?: number): { hit: string | null, ticksAdvanced: number, roundEnded: boolean, winnerTeam: "blue" | "red" | null }`
+- `combat.sfxQueue: string[]` (drained by `controller.js` each frame)
 
 ### 4.5 `js/renderer.js`
 - `export function initRenderer(canvas: HTMLCanvasElement): CanvasRenderingContext2D`

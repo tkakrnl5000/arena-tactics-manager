@@ -3,7 +3,14 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+  <meta name="theme-color" content="#080b12" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="ArenaTactics" />
   <title>아레나 택틱스 매니저 (Arena Tactics Manager)</title>
+  <link rel="manifest" href="./manifest.json" />
+  <link rel="icon" type="image/svg+xml" href="./icon.svg" />
+  <link rel="apple-touch-icon" href="./icon.svg" />
   <link rel="stylesheet" href="./style.css" />
 </head>
 <body>
@@ -23,7 +30,8 @@
       <div class="top-right">
         <button id="top-room-badge" class="pill pill-room num" type="button" title="방/시트 관리">ROOM ----</button>
         <button id="btn-copy-room" class="icon-pill" type="button" title="4자리 방 코드 복사">복사</button>
-        <span id="top-net-badge" class="pill pill-local">LOCAL</span>
+        <button id="btn-sfx-toggle" class="icon-pill is-on" type="button" title="효과음 켜기/끄기">🔊</button>
+        <span id="top-net-badge" class="pill pill-local">🟡 로컬 모드</span>
         <button id="btn-go-hub" class="icon-pill hidden" type="button" title="주간 허브로 이동">허브</button>
       </div>
     </header>
@@ -39,11 +47,18 @@
         </div>
 
         <div class="card lobby-actions-card">
-          <button id="btn-create-room" class="btn btn-primary btn-block" type="button">
-            새 6인 리그 방 생성 (Host · 1번 시트)
-          </button>
+          <div class="room-mode-grid">
+            <button id="btn-create-arcade-room" class="mode-select-card is-arcade" type="button">
+              <div class="mode-card-title">⚔️ 2인 아케이드 라이브</div>
+              <div class="mode-card-sub">즉시 Bo3 · 직접 밴픽 · 1.5초 동기화</div>
+            </button>
+            <button id="btn-create-room" class="mode-select-card is-league" type="button">
+              <div class="mode-card-title">🏆 3~6인 데일리 리그</div>
+              <div class="mode-card-sub">리얼타임 경영 · 감독 위임 · 스토브리그</div>
+            </button>
+          </div>
 
-          <div class="divider-row"><span>또는 4자리 코드로 참여 / AI 시트 인수</span></div>
+          <div class="divider-row"><span>또는 4자리 코드로 참여 / 시트 인수</span></div>
 
           <div class="join-row">
             <input id="input-room-code" class="input-field input-code" type="text" inputmode="numeric" maxlength="4" placeholder="코드 4자리" />
@@ -53,8 +68,21 @@
 
           <div class="lobby-utility-row">
             <button id="btn-quick-exhibition" class="btn btn-ghost btn-sm" type="button">빠른 3v3 친선전</button>
-            <button id="btn-open-neon-modal" class="btn btn-ghost btn-sm" type="button">Neon DB 설정</button>
+            <button id="btn-open-neon-modal" class="btn btn-ghost btn-sm" type="button">☁️ 온라인 서버 설정</button>
           </div>
+
+          <div class="schedule-mode-box">
+            <div class="schedule-mode-label">리그 진행 스케줄 모드</div>
+            <div id="lobby-schedule-mode" class="schedule-mode-pills"></div>
+          </div>
+        </div>
+
+        <div class="card lobby-map-card">
+          <div class="card-header-row">
+            <h2 class="card-title">아레나 전장 선택 (4 Maps)</h2>
+            <span class="muted-text">지형 · 성소 · 기믹</span>
+          </div>
+          <div id="lobby-map-selector" class="map-selector-grid"></div>
         </div>
 
         <div class="card lobby-seats-card">
@@ -66,23 +94,40 @@
         </div>
       </section>
 
-      <!-- 2. 주간 리그 허브 (순위/일정/구단 AP 운영/로스터/패치노트) -->
+      <!-- 1.5. 2인 아케이드 라이브 대기실 (BLUE vs RED) -->
+      <section id="screen-arcade-lobby" class="screen" data-screen="ARCADE_LOBBY">
+        <div id="arcade-lobby-header" class="playoff-header"></div>
+        <div id="arcade-versus-board" class="arcade-versus-board"></div>
+        <footer class="hub-footer-bar arcade-footer-bar">
+          <button id="btn-arcade-reroll" class="btn btn-ghost btn-sm" type="button">🎲 로스터 랜덤 리롤</button>
+          <button id="btn-arcade-vs-ai" class="btn btn-accent btn-sm" type="button">🤖 AI 라이벌과 즉시 시작</button>
+          <button id="btn-arcade-ready" class="btn btn-primary flex-1" type="button">✅ 전투 준비 완료</button>
+          <button id="btn-arcade-exit-lobby" class="btn btn-ghost btn-sm" type="button">🏠 로비</button>
+        </footer>
+      </section>
+
+      <!-- 2. 주간 리그 허브 (순위/일정/감독·밴픽노트/구단 AP 운영/로스터/패치노트) -->
       <section id="screen-weekly-hub" class="screen" data-screen="WEEKLY_HUB">
         <div id="hub-club-banner" class="hub-club-banner"></div>
 
+        <div id="hub-schedule-bar" class="hub-schedule-bar"></div>
+
         <nav id="hub-tabs" class="hub-tabs">
           <button class="hub-tab active" data-hub-tab="STANDINGS" type="button">순위·일정</button>
-          <button class="hub-tab" data-hub-tab="MANAGEMENT" type="button">구단(AP)</button>
+          <button class="hub-tab" data-hub-tab="COACH" type="button">감독·노트</button>
+          <button class="hub-tab" data-hub-tab="MANAGEMENT" type="button">루틴·재정</button>
           <button class="hub-tab" data-hub-tab="ROSTER" type="button">로스터·FA</button>
-          <button class="hub-tab" data-hub-tab="PATCH" type="button">패치노트</button>
+          <button class="hub-tab" data-hub-tab="PATCH" type="button">패치</button>
         </nav>
 
         <div id="hub-tab-content" class="hub-tab-content"></div>
 
         <footer class="hub-footer-bar">
           <button id="btn-start-round-match" class="btn btn-primary flex-2" type="button">경기 시작 (밴픽)</button>
+          <button id="btn-open-news" class="btn btn-accent btn-sm" type="button">데일리 뉴스</button>
           <button id="btn-quick-sim-week" class="btn btn-secondary flex-1" type="button">빠른 시뮬</button>
-          <button id="btn-open-seats-modal" class="btn btn-ghost" type="button">시트</button>
+          <button id="btn-open-coach-market" class="btn btn-ghost btn-sm" type="button">감독</button>
+          <button id="btn-open-seats-modal" class="btn btn-ghost btn-sm" type="button">시트</button>
         </footer>
       </section>
 
@@ -91,6 +136,8 @@
         <div class="draft-header">
           <div id="draft-series-title" class="draft-series-title">WEEK 1 · Bo3</div>
           <div id="draft-phase-banner" class="draft-phase-banner">BLUE BAN 차례</div>
+          <div id="draft-map-banner" class="draft-map-banner"></div>
+          <div id="draft-coach-bar" class="draft-coach-bar"></div>
         </div>
 
         <div class="draft-slots-board">
@@ -100,6 +147,7 @@
         </div>
 
         <div id="draft-champ-grid" class="draft-champ-grid"></div>
+        <div id="draft-assign-panel" class="draft-assign-panel hidden"></div>
 
         <div id="draft-hint-bar" class="draft-hint-bar">전술 카드를 탭하여 밴 또는 픽을 확정하세요.</div>
       </section>
@@ -111,10 +159,13 @@
         <div class="combat-subbar">
           <div id="combat-rites-strip" class="combat-rites-strip"></div>
           <div class="combat-speed-controls">
+            <button id="btn-live-override" class="mini-btn override-btn" type="button">감독위임</button>
             <button id="btn-speed-toggle" class="mini-btn" type="button">1x</button>
             <button id="btn-pause-combat" class="mini-btn" type="button">일시정지</button>
           </div>
         </div>
+
+        <div id="vod-timeline-bar" class="vod-timeline-bar hidden"></div>
 
         <div id="arena-wrapper" class="arena-wrapper">
           <canvas id="arena-canvas" width="360" height="420"></canvas>
@@ -157,6 +208,7 @@
       <section id="screen-rite-draft" class="screen" data-screen="RITE_DRAFT">
         <div id="rite-series-header" class="rite-header"></div>
         <div class="rite-prompt">다음 세트에 적용할 전술 증강(Rite) 카드 1장을 선택하세요</div>
+        <div id="rite-coach-actions" class="rite-coach-actions"></div>
         <div id="rite-cards-list" class="rite-cards-list"></div>
         <div id="rite-equipped-summary" class="rite-equipped-summary"></div>
       </section>
@@ -169,6 +221,16 @@
           <button id="btn-playoff-next-match" class="btn btn-primary flex-2" type="button">플레이오프 경기 진행</button>
           <button id="btn-playoff-quick-sim" class="btn btn-secondary flex-1" type="button">빠른 시뮬</button>
           <button id="btn-new-season" class="btn btn-ghost" type="button">새 시즌</button>
+        </footer>
+      </section>
+
+      <!-- 7. 시즌 종료 스토브리그 & 명예의 전당 화면 -->
+      <section id="screen-stove-league" class="screen" data-screen="STOVE_LEAGUE">
+        <div id="stove-header" class="playoff-header"></div>
+        <div id="stove-content" class="stove-content"></div>
+        <footer class="hub-footer-bar">
+          <button id="btn-start-next-season" class="btn btn-primary flex-2" type="button">다음 시즌 개막</button>
+          <button id="btn-open-stove-news" class="btn btn-accent btn-sm" type="button">결산 뉴스</button>
         </footer>
       </section>
     </main>
@@ -189,5 +251,12 @@
   </div>
 
   <script type="module" src="./js/controller.js"></script>
+  <script>
+    if ("serviceWorker" in navigator && (location.protocol === "http:" || location.protocol === "https:")) {
+      window.addEventListener("load", () => {
+        navigator.serviceWorker.register("./sw.js").catch(() => {});
+      });
+    }
+  </script>
 </body>
 </html>
